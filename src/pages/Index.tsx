@@ -281,7 +281,9 @@ const Index = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Управление сотрудниками</h1>
-        <p className="text-gray-600 text-right">Когда-нибудь мы сделаем здесь что-то нужное. Реально нужное.<hr>А пока тут будет бесполезная информация. Так как изначально это задумывалась для ГРЛС. <hr>Бум дыц.</p>
+        <p className="text-gray-600 text-right">Когда-нибудь мы сделаем здесь что-то нужное. Реально нужное. 
+А пока тут будет бесполезная информация. Так как изначально это задумывалась для ГРЛС. 
+Бум дыц.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
