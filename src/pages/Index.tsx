@@ -19,11 +19,45 @@ const mockEmployees = [
   { id: 6, name: 'Александр Федоров', position: 'UX Designer', department: 'Design', status: 'active', email: 'alex@company.com' }
 ];
 
+// Request types configuration
+const requestTypes = {
+  'visp': {
+    label: 'ВИСП',
+    icon: 'User',
+    subtypes: [
+      { value: 'visp-create', label: 'Создание УЗ' },
+      { value: 'visp-modify', label: 'Изменение УЗ' },
+      { value: 'visp-edit', label: 'Редактирование УЗ' }
+    ]
+  },
+  'systems': {
+    label: 'Информационные системы',
+    icon: 'Server',
+    subtypes: [
+      { value: 'ibd-r', label: 'ИБД-Р' },
+      { value: 'ibd-f', label: 'ИБД-Ф' },
+      { value: 'soop', label: 'СООП' },
+      { value: 'eir-rmu', label: 'ЕИР РМУ' },
+      { value: 'fis', label: 'ФИС' },
+      { value: 'gasps', label: 'ГАСПС' }
+    ]
+  },
+  'equipment': {
+    label: 'Техника',
+    icon: 'Monitor',
+    subtypes: [
+      { value: 'equipment-writeoff', label: 'Списание' },
+      { value: 'equipment-repair', label: 'Ремонт' }
+    ]
+  }
+};
+
 // Mock data for requests
 const mockRequests = [
-  { id: 1, type: 'create', employee: 'Новый сотрудник', department: 'IT', status: 'pending', date: '2024-01-15' },
-  { id: 2, type: 'delete', employee: 'Иван Петров', department: 'HR', status: 'approved', date: '2024-01-14' },
-  { id: 3, type: 'create', employee: 'Мария Кузнецова', department: 'Marketing', status: 'rejected', date: '2024-01-13' }
+  { id: 1, type: 'visp-create', employee: 'Новый сотрудник', department: 'IT', status: 'pending', date: '2024-01-15' },
+  { id: 2, type: 'visp-edit', employee: 'Иван Петров', department: 'HR', status: 'approved', date: '2024-01-14' },
+  { id: 3, type: 'ibd-r', employee: 'Мария Кузнецова', department: 'Marketing', status: 'rejected', date: '2024-01-13' },
+  { id: 4, type: 'equipment-repair', employee: 'Техника #1234', department: 'IT', status: 'pending', date: '2024-01-12' }
 ];
 
 type Tab = 'dashboard' | 'employees' | 'requests' | 'history' | 'settings';
@@ -34,7 +68,8 @@ const Index = () => {
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedEmployees, setSelectedEmployees] = useState<number[]>([]);
-  const [requestType, setRequestType] = useState<'create' | 'delete'>('create');
+  const [requestCategory, setRequestCategory] = useState<string>('visp');
+  const [requestType, setRequestType] = useState<string>('visp-create');
 
   const filteredEmployees = mockEmployees.filter(employee => {
     const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -59,12 +94,21 @@ const Index = () => {
     );
   };
 
+  const getRequestTypeLabel = (type: string) => {
+    for (const category of Object.values(requestTypes)) {
+      const subtype = category.subtypes.find(st => st.value === type);
+      if (subtype) return subtype.label;
+    }
+    return type;
+  };
+
   const createRequest = () => {
     const employeeNames = selectedEmployees.map(id => 
       mockEmployees.find(e => e.id === id)?.name
     ).join(', ');
     
-    alert(`Заявка на ${requestType === 'create' ? 'создание' : 'удаление'} учетных записей для: ${employeeNames}`);
+    const typeLabel = getRequestTypeLabel(requestType);
+    alert(`Заявка на "${typeLabel}" для: ${employeeNames}`);
     setSelectedEmployees([]);
   };
 
@@ -133,7 +177,7 @@ const Index = () => {
               <div key={request.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>
                   <p className="font-medium">{request.employee}</p>
-                  <p className="text-sm text-gray-600">{request.type === 'create' ? 'Создание' : 'Удаление'} • {request.department}</p>
+                  <p className="text-sm text-gray-600">{getRequestTypeLabel(request.type)} • {request.department}</p>
                 </div>
                 <Badge variant={request.status === 'pending' ? 'default' : request.status === 'approved' ? 'default' : 'destructive'}>
                   {request.status === 'pending' ? 'Ожидает' : request.status === 'approved' ? 'Одобрено' : 'Отклонено'}
@@ -190,14 +234,39 @@ const Index = () => {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Тип заявки</label>
-                <Select value={requestType} onValueChange={(value: 'create' | 'delete') => setRequestType(value)}>
+                <label className="text-sm font-medium mb-2 block">Категория заявки</label>
+                <Select value={requestCategory} onValueChange={(value: string) => {
+                  setRequestCategory(value);
+                  const firstSubtype = requestTypes[value as keyof typeof requestTypes]?.subtypes[0];
+                  if (firstSubtype) setRequestType(firstSubtype.value);
+                }}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="create">Создание учетной записи</SelectItem>
-                    <SelectItem value="delete">Удаление учетной записи</SelectItem>
+                    {Object.entries(requestTypes).map(([key, category]) => (
+                      <SelectItem key={key} value={key}>
+                        <div className="flex items-center space-x-2">
+                          <Icon name={category.icon as any} size={16} />
+                          <span>{category.label}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Тип заявки</label>
+                <Select value={requestType} onValueChange={(value: string) => setRequestType(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {requestTypes[requestCategory as keyof typeof requestTypes]?.subtypes.map((subtype) => (
+                      <SelectItem key={subtype.value} value={subtype.value}>
+                        {subtype.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -318,19 +387,17 @@ const Index = () => {
           {mockRequests.map(request => (
             <div key={request.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
               <div className="flex items-center space-x-4">
-                <div className={`p-2 rounded-full ${
-                  request.type === 'create' ? 'bg-green-100' : 'bg-red-100'
-                }`}>
+                <div className="p-2 rounded-full bg-blue-100">
                   <Icon 
-                    name={request.type === 'create' ? 'UserPlus' : 'UserMinus'} 
-                    className={request.type === 'create' ? 'text-green-600' : 'text-red-600'} 
+                    name="FileText" 
+                    className="text-blue-600" 
                     size={20} 
                   />
                 </div>
                 <div>
                   <h3 className="font-semibold">{request.employee}</h3>
                   <p className="text-sm text-gray-600">
-                    {request.type === 'create' ? 'Создание' : 'Удаление'} учетной записи • {request.department}
+                    {getRequestTypeLabel(request.type)} • {request.department}
                   </p>
                   <p className="text-xs text-gray-500">{request.date}</p>
                 </div>
