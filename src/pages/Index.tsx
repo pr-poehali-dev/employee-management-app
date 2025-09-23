@@ -70,6 +70,16 @@ const Index = () => {
   const [selectedEmployees, setSelectedEmployees] = useState<number[]>([]);
   const [requestCategory, setRequestCategory] = useState<string>('visp');
   const [requestType, setRequestType] = useState<string>('visp-create');
+  const [isManageEmployeeOpen, setIsManageEmployeeOpen] = useState(false);
+  const [manageAction, setManageAction] = useState<'add' | 'edit' | 'delete'>('add');
+  const [editingEmployee, setEditingEmployee] = useState<any>(null);
+  const [employeeForm, setEmployeeForm] = useState({
+    name: '',
+    position: '',
+    department: '',
+    email: '',
+    status: 'active'
+  });
 
   const filteredEmployees = mockEmployees.filter(employee => {
     const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -110,6 +120,44 @@ const Index = () => {
     const typeLabel = getRequestTypeLabel(requestType);
     alert(`Заявка на "${typeLabel}" для: ${employeeNames}`);
     setSelectedEmployees([]);
+  };
+
+  const handleManageEmployee = (action: 'add' | 'edit' | 'delete', employee?: any) => {
+    setManageAction(action);
+    if (action === 'edit' && employee) {
+      setEditingEmployee(employee);
+      setEmployeeForm({
+        name: employee.name,
+        position: employee.position,
+        department: employee.department,
+        email: employee.email,
+        status: employee.status
+      });
+    } else if (action === 'add') {
+      setEmployeeForm({
+        name: '',
+        position: '',
+        department: '',
+        email: '',
+        status: 'active'
+      });
+    }
+    setIsManageEmployeeOpen(true);
+  };
+
+  const saveEmployee = () => {
+    if (manageAction === 'add') {
+      alert(`Добавлен новый сотрудник: ${employeeForm.name}`);
+    } else if (manageAction === 'edit') {
+      alert(`Данные сотрудника ${editingEmployee.name} обновлены`);
+    } else if (manageAction === 'delete') {
+      const employeeNames = selectedEmployees.map(id => 
+        mockEmployees.find(e => e.id === id)?.name
+      ).join(', ');
+      alert(`Удалены сотрудники: ${employeeNames}`);
+      setSelectedEmployees([]);
+    }
+    setIsManageEmployeeOpen(false);
   };
 
   const renderDashboard = () => (
@@ -221,13 +269,122 @@ const Index = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">База сотрудников</h1>
           <p className="text-gray-600">Управление учетными записями сотрудников</p>
         </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90">
-              <Icon name="Plus" size={16} className="mr-2" />
-              Создать заявку
-            </Button>
-          </DialogTrigger>
+        <div className="flex space-x-3">
+          <Dialog open={isManageEmployeeOpen} onOpenChange={setIsManageEmployeeOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" onClick={() => handleManageEmployee('add')}>
+                <Icon name="UserPlus" size={16} className="mr-2" />
+                Управление сотрудниками
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>
+                  {manageAction === 'add' ? 'Добавить сотрудника' : 
+                   manageAction === 'edit' ? 'Редактировать сотрудника' : 
+                   'Удалить сотрудников'}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                {manageAction === 'delete' ? (
+                  <div>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Вы действительно хотите удалить выбранных сотрудников?
+                    </p>
+                    <div className="max-h-32 overflow-y-auto border rounded p-2 text-sm bg-gray-50">
+                      {selectedEmployees.length === 0 ? (
+                        <p className="text-gray-500">Выберите сотрудников для удаления</p>
+                      ) : (
+                        selectedEmployees.map(id => {
+                          const employee = mockEmployees.find(e => e.id === id);
+                          return <div key={id} className="py-1">{employee?.name}</div>;
+                        })
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">ФИО</label>
+                      <Input
+                        value={employeeForm.name}
+                        onChange={(e) => setEmployeeForm({...employeeForm, name: e.target.value})}
+                        placeholder="Введите ФИО сотрудника"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Должность</label>
+                      <Input
+                        value={employeeForm.position}
+                        onChange={(e) => setEmployeeForm({...employeeForm, position: e.target.value})}
+                        placeholder="Введите должность"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Отдел</label>
+                      <Select value={employeeForm.department} onValueChange={(value) => setEmployeeForm({...employeeForm, department: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Выберите отдел" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="IT">IT</SelectItem>
+                          <SelectItem value="HR">HR</SelectItem>
+                          <SelectItem value="Product">Product</SelectItem>
+                          <SelectItem value="Design">Design</SelectItem>
+                          <SelectItem value="Marketing">Marketing</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Email</label>
+                      <Input
+                        value={employeeForm.email}
+                        onChange={(e) => setEmployeeForm({...employeeForm, email: e.target.value})}
+                        placeholder="email@company.com"
+                        type="email"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Статус</label>
+                      <Select value={employeeForm.status} onValueChange={(value) => setEmployeeForm({...employeeForm, status: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Активен</SelectItem>
+                          <SelectItem value="inactive">Неактивен</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                )}
+                <div className="flex space-x-2">
+                  <Button 
+                    onClick={saveEmployee} 
+                    className="flex-1"
+                    disabled={manageAction === 'delete' && selectedEmployees.length === 0}
+                  >
+                    {manageAction === 'add' ? 'Добавить' : 
+                     manageAction === 'edit' ? 'Сохранить' : 'Удалить'}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsManageEmployeeOpen(false)}
+                    className="flex-1"
+                  >
+                    Отмена
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="bg-primary hover:bg-primary/90">
+                <Icon name="Plus" size={16} className="mr-2" />
+                Создать заявку
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Создание заявки</DialogTitle>
@@ -331,7 +488,7 @@ const Index = () => {
           {filteredEmployees.map(employee => (
             <Card 
               key={employee.id} 
-              className={`p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
+              className={`p-4 cursor-pointer transition-all duration-200 hover:shadow-md group ${
                 selectedEmployees.includes(employee.id) ? 'ring-2 ring-primary bg-blue-50' : ''
               }`}
               onClick={() => handleEmployeeSelect(employee.id)}
@@ -366,6 +523,31 @@ const Index = () => {
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                   <Icon name="Mail" size={14} />
                   <span>{employee.email}</span>
+                </div>
+                <div className="flex space-x-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleManageEmployee('edit', employee);
+                    }}
+                    className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                  >
+                    <Icon name="Edit" size={14} />
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedEmployees([employee.id]);
+                      handleManageEmployee('delete');
+                    }}
+                    className="text-red-600 border-red-600 hover:bg-red-50"
+                  >
+                    <Icon name="Trash2" size={14} />
+                  </Button>
                 </div>
               </div>
             </Card>
