@@ -385,7 +385,7 @@ const Index = () => {
                 Создать заявку
               </Button>
             </DialogTrigger>
-          <DialogContent className="max-w-md">
+            <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Создание заявки</DialogTitle>
             </DialogHeader>
@@ -446,8 +446,9 @@ const Index = () => {
                 Создать заявку
               </Button>
             </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card className="p-6">
