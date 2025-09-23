@@ -9,14 +9,104 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Separator } from '@/components/ui/separator';
 import Icon from '@/components/ui/icon';
 
-// Mock data for employees
+// Mock data for MVD employees
 const mockEmployees = [
-  { id: 1, name: 'Анна Петрова', position: 'Frontend Developer', department: 'IT', status: 'active', email: 'anna@company.com' },
-  { id: 2, name: 'Михаил Иванов', position: 'Backend Developer', department: 'IT', status: 'active', email: 'mikhail@company.com' },
-  { id: 3, name: 'Елена Сидорова', position: 'HR Manager', department: 'HR', status: 'inactive', email: 'elena@company.com' },
-  { id: 4, name: 'Дмитрий Козлов', position: 'DevOps Engineer', department: 'IT', status: 'active', email: 'dmitry@company.com' },
-  { id: 5, name: 'Ольга Смирнова', position: 'Product Manager', department: 'Product', status: 'active', email: 'olga@company.com' },
-  { id: 6, name: 'Александр Федоров', position: 'UX Designer', department: 'Design', status: 'active', email: 'alex@company.com' }
+  { 
+    id: 1, 
+    last_name: 'Петрова', 
+    first_name: 'Анна', 
+    middle_name: 'Ивановна',
+    position: 'Инженер-программист', 
+    rank: 'лейтенант полиции',
+    service: 'ИТС', 
+    department: 'ОИТ', 
+    address: 'г. Москва, ул. Петровка, 38',
+    office: '301',
+    phone: '+7(495)123-45-67',
+    sudis_login: 'petrova_ai',
+    official_email: 'petrova_ai@mvd.ru',
+    status: 'active'
+  },
+  { 
+    id: 2, 
+    last_name: 'Иванов', 
+    first_name: 'Михаил', 
+    middle_name: 'Сергеевич',
+    position: 'Старший инженер-программист', 
+    rank: 'старший лейтенант полиции',
+    service: 'ИТС', 
+    department: 'ОИТ', 
+    address: 'г. Москва, ул. Петровка, 38',
+    office: '302',
+    phone: '+7(495)123-45-68',
+    sudis_login: 'ivanov_ms',
+    official_email: 'ivanov_ms@mvd.ru',
+    status: 'active'
+  },
+  { 
+    id: 3, 
+    last_name: 'Сидорова', 
+    first_name: 'Елена', 
+    middle_name: 'Александровна',
+    position: 'Специалист по кадрам', 
+    rank: 'майор полиции',
+    service: 'ОК', 
+    department: 'УК', 
+    address: 'г. Москва, ул. Петровка, 38',
+    office: '201',
+    phone: '+7(495)123-45-69',
+    sudis_login: 'sidorova_ea',
+    official_email: 'sidorova_ea@mvd.ru',
+    status: 'inactive'
+  },
+  { 
+    id: 4, 
+    last_name: 'Козлов', 
+    first_name: 'Дмитрий', 
+    middle_name: 'Петрович',
+    position: 'Системный администратор', 
+    rank: 'капитан полиции',
+    service: 'ИТС', 
+    department: 'ОИТ', 
+    address: 'г. Москва, ул. Петровка, 38',
+    office: '303',
+    phone: '+7(495)123-45-70',
+    sudis_login: 'kozlov_dp',
+    official_email: 'kozlov_dp@mvd.ru',
+    status: 'active'
+  },
+  { 
+    id: 5, 
+    last_name: 'Смирнова', 
+    first_name: 'Ольга', 
+    middle_name: 'Викторовна',
+    position: 'Начальник отдела', 
+    rank: 'подполковник полиции',
+    service: 'АХО', 
+    department: 'АХО', 
+    address: 'г. Москва, ул. Петровка, 38',
+    office: '401',
+    phone: '+7(495)123-45-71',
+    sudis_login: 'smirnova_ov',
+    official_email: 'smirnova_ov@mvd.ru',
+    status: 'active'
+  },
+  { 
+    id: 6, 
+    last_name: 'Федоров', 
+    first_name: 'Александр', 
+    middle_name: 'Николаевич',
+    position: 'Дизайнер', 
+    rank: 'прапорщик полиции',
+    service: 'ИТС', 
+    department: 'ОИТ', 
+    address: 'г. Москва, ул. Петровка, 38',
+    office: '304',
+    phone: '+7(495)123-45-72',
+    sudis_login: 'fedorov_an',
+    official_email: 'fedorov_an@mvd.ru',
+    status: 'active'
+  }
 ];
 
 // Request types configuration
@@ -74,17 +164,26 @@ const Index = () => {
   const [manageAction, setManageAction] = useState<'add' | 'edit' | 'delete'>('add');
   const [editingEmployee, setEditingEmployee] = useState<any>(null);
   const [employeeForm, setEmployeeForm] = useState({
-    name: '',
+    last_name: '',
+    first_name: '',
+    middle_name: '',
     position: '',
+    rank: '',
+    service: '',
     department: '',
-    email: '',
+    address: '',
+    office: '',
+    phone: '',
+    sudis_login: '',
     status: 'active'
   });
 
   const filteredEmployees = mockEmployees.filter(employee => {
-    const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         employee.position.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDepartment = departmentFilter === 'all' || employee.department === departmentFilter;
+    const fullName = `${employee.last_name} ${employee.first_name} ${employee.middle_name || ''}`;
+    const matchesSearch = fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         employee.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         employee.sudis_login.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesDepartment = departmentFilter === 'all' || employee.service === departmentFilter;
     const matchesStatus = statusFilter === 'all' || employee.status === statusFilter;
     return matchesSearch && matchesDepartment && matchesStatus;
   });
@@ -93,7 +192,7 @@ const Index = () => {
     totalEmployees: mockEmployees.length,
     activeEmployees: mockEmployees.filter(e => e.status === 'active').length,
     pendingRequests: mockRequests.filter(r => r.status === 'pending').length,
-    departments: [...new Set(mockEmployees.map(e => e.department))].length
+    departments: [...new Set(mockEmployees.map(e => e.service))].length
   };
 
   const handleEmployeeSelect = (employeeId: number) => {
@@ -127,18 +226,32 @@ const Index = () => {
     if (action === 'edit' && employee) {
       setEditingEmployee(employee);
       setEmployeeForm({
-        name: employee.name,
+        last_name: employee.last_name,
+        first_name: employee.first_name,
+        middle_name: employee.middle_name,
         position: employee.position,
+        rank: employee.rank,
+        service: employee.service,
         department: employee.department,
-        email: employee.email,
+        address: employee.address,
+        office: employee.office,
+        phone: employee.phone,
+        sudis_login: employee.sudis_login,
         status: employee.status
       });
     } else if (action === 'add') {
       setEmployeeForm({
-        name: '',
+        last_name: '',
+        first_name: '',
+        middle_name: '',
         position: '',
+        rank: '',
+        service: '',
         department: '',
-        email: '',
+        address: '',
+        office: '',
+        phone: '',
+        sudis_login: '',
         status: 'active'
       });
     }
@@ -147,13 +260,17 @@ const Index = () => {
 
   const saveEmployee = () => {
     if (manageAction === 'add') {
-      alert(`Добавлен новый сотрудник: ${employeeForm.name}`);
+      const fullName = `${employeeForm.last_name} ${employeeForm.first_name} ${employeeForm.middle_name}`;
+      const officialEmail = `${employeeForm.sudis_login}@mvd.ru`;
+      alert(`Добавлен новый сотрудник: ${fullName}\nСлужебная почта: ${officialEmail}`);
     } else if (manageAction === 'edit') {
-      alert(`Данные сотрудника ${editingEmployee.name} обновлены`);
+      const fullName = `${editingEmployee.last_name} ${editingEmployee.first_name} ${editingEmployee.middle_name}`;
+      alert(`Данные сотрудника ${fullName} обновлены`);
     } else if (manageAction === 'delete') {
-      const employeeNames = selectedEmployees.map(id => 
-        mockEmployees.find(e => e.id === id)?.name
-      ).join(', ');
+      const employeeNames = selectedEmployees.map(id => {
+        const emp = mockEmployees.find(e => e.id === id);
+        return emp ? `${emp.last_name} ${emp.first_name}` : '';
+      }).join(', ');
       alert(`Удалены сотрудники: ${employeeNames}`);
       setSelectedEmployees([]);
     }
@@ -207,7 +324,7 @@ const Index = () => {
         <Card className="p-6 hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Отделы</p>
+              <p className="text-sm font-medium text-gray-600">Службы</p>
               <p className="text-3xl font-bold text-purple-600">{stats.departments}</p>
             </div>
             <div className="bg-purple-100 p-3 rounded-full">
@@ -238,13 +355,13 @@ const Index = () => {
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Распределение по отделам</h3>
           <div className="space-y-3">
-            {[...new Set(mockEmployees.map(e => e.department))].map(dept => {
-              const count = mockEmployees.filter(e => e.department === dept).length;
+            {[...new Set(mockEmployees.map(e => e.service))].map(service => {
+              const count = mockEmployees.filter(e => e.service === service).length;
               const percentage = (count / mockEmployees.length) * 100;
               return (
-                <div key={dept}>
+                <div key={service}>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium">{dept}</span>
+                    <span className="font-medium">{service}</span>
                     <span className="text-gray-600">{count} чел.</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -297,7 +414,11 @@ const Index = () => {
                       ) : (
                         selectedEmployees.map(id => {
                           const employee = mockEmployees.find(e => e.id === id);
-                          return <div key={id} className="py-1">{employee?.name}</div>;
+                          return employee ? (
+                            <div key={id} className="py-1">
+                              {employee.last_name} {employee.first_name} {employee.middle_name}
+                            </div>
+                          ) : null;
                         })
                       )}
                     </div>
@@ -305,11 +426,27 @@ const Index = () => {
                 ) : (
                   <>
                     <div>
-                      <label className="text-sm font-medium mb-2 block">ФИО</label>
+                      <label className="text-sm font-medium mb-2 block">Фамилия</label>
                       <Input
-                        value={employeeForm.name}
-                        onChange={(e) => setEmployeeForm({...employeeForm, name: e.target.value})}
-                        placeholder="Введите ФИО сотрудника"
+                        value={employeeForm.last_name}
+                        onChange={(e) => setEmployeeForm({...employeeForm, last_name: e.target.value})}
+                        placeholder="Введите фамилию"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Имя</label>
+                      <Input
+                        value={employeeForm.first_name}
+                        onChange={(e) => setEmployeeForm({...employeeForm, first_name: e.target.value})}
+                        placeholder="Введите имя"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Отчество</label>
+                      <Input
+                        value={employeeForm.middle_name}
+                        onChange={(e) => setEmployeeForm({...employeeForm, middle_name: e.target.value})}
+                        placeholder="Введите отчество (необязательно)"
                       />
                     </div>
                     <div>
@@ -321,27 +458,59 @@ const Index = () => {
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium mb-2 block">Отдел</label>
-                      <Select value={employeeForm.department} onValueChange={(value) => setEmployeeForm({...employeeForm, department: value})}>
+                      <label className="text-sm font-medium mb-2 block">Звание</label>
+                      <Input
+                        value={employeeForm.rank}
+                        onChange={(e) => setEmployeeForm({...employeeForm, rank: e.target.value})}
+                        placeholder="напр. лейтенант полиции"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Служба</label>
+                      <Select value={employeeForm.service} onValueChange={(value) => setEmployeeForm({...employeeForm, service: value})}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Выберите отдел" />
+                          <SelectValue placeholder="Выберите службу" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="IT">IT</SelectItem>
-                          <SelectItem value="HR">HR</SelectItem>
-                          <SelectItem value="Product">Product</SelectItem>
-                          <SelectItem value="Design">Design</SelectItem>
-                          <SelectItem value="Marketing">Marketing</SelectItem>
+                          <SelectItem value="ИТС">ИТС</SelectItem>
+                          <SelectItem value="ОК">ОК</SelectItem>
+                          <SelectItem value="АХО">АХО</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <label className="text-sm font-medium mb-2 block">Email</label>
+                      <label className="text-sm font-medium mb-2 block">Подразделение</label>
                       <Input
-                        value={employeeForm.email}
-                        onChange={(e) => setEmployeeForm({...employeeForm, email: e.target.value})}
-                        placeholder="email@company.com"
-                        type="email"
+                        value={employeeForm.department}
+                        onChange={(e) => setEmployeeForm({...employeeForm, department: e.target.value})}
+                        placeholder="напр. ОИТ, УК, АХО"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Логин СУДИС</label>
+                      <Input
+                        value={employeeForm.sudis_login}
+                        onChange={(e) => setEmployeeForm({...employeeForm, sudis_login: e.target.value})}
+                        placeholder="напр. petrov_iv"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Служебная почта: {employeeForm.sudis_login}@mvd.ru
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Кабинет</label>
+                      <Input
+                        value={employeeForm.office}
+                        onChange={(e) => setEmployeeForm({...employeeForm, office: e.target.value})}
+                        placeholder="напр. 301"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Служебный телефон</label>
+                      <Input
+                        value={employeeForm.phone}
+                        onChange={(e) => setEmployeeForm({...employeeForm, phone: e.target.value})}
+                        placeholder="+7(495)123-45-67"
                       />
                     </div>
                     <div>
@@ -455,7 +624,7 @@ const Index = () => {
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="flex-1">
             <Input
-              placeholder="Поиск по имени или должности..."
+              placeholder="Поиск по ФИО, должности или логину СУДИС..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full"
@@ -463,14 +632,13 @@ const Index = () => {
           </div>
           <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
             <SelectTrigger className="w-full md:w-48">
-              <SelectValue placeholder="Отдел" />
+              <SelectValue placeholder="Служба" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Все отделы</SelectItem>
-              <SelectItem value="IT">IT</SelectItem>
-              <SelectItem value="HR">HR</SelectItem>
-              <SelectItem value="Product">Product</SelectItem>
-              <SelectItem value="Design">Design</SelectItem>
+              <SelectItem value="all">Все службы</SelectItem>
+              <SelectItem value="ИТС">ИТС</SelectItem>
+              <SelectItem value="ОК">ОК</SelectItem>
+              <SelectItem value="АХО">АХО</SelectItem>
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -498,12 +666,15 @@ const Index = () => {
                 <div className="flex items-center space-x-3">
                   <Avatar>
                     <AvatarFallback className="bg-primary text-primary-foreground">
-                      {employee.name.split(' ').map(n => n[0]).join('')}
+                      {employee.last_name[0]}{employee.first_name[0]}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="font-semibold text-gray-900">{employee.name}</h3>
+                    <h3 className="font-semibold text-gray-900">
+                      {employee.last_name} {employee.first_name} {employee.middle_name}
+                    </h3>
                     <p className="text-sm text-gray-600">{employee.position}</p>
+                    <p className="text-xs text-gray-500">{employee.rank}</p>
                   </div>
                 </div>
                 {selectedEmployees.includes(employee.id) && (
@@ -512,7 +683,11 @@ const Index = () => {
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Отдел:</span>
+                  <span className="text-sm text-gray-600">Служба:</span>
+                  <Badge variant="outline">{employee.service}</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Подразделение:</span>
                   <Badge variant="outline">{employee.department}</Badge>
                 </div>
                 <div className="flex items-center justify-between">
@@ -523,7 +698,15 @@ const Index = () => {
                 </div>
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                   <Icon name="Mail" size={14} />
-                  <span>{employee.email}</span>
+                  <span>{employee.official_email}</span>
+                </div>
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <Icon name="Phone" size={14} />
+                  <span>{employee.phone}</span>
+                </div>
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <Icon name="MapPin" size={14} />
+                  <span>Каб. {employee.office}</span>
                 </div>
                 <div className="flex space-x-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Button 
