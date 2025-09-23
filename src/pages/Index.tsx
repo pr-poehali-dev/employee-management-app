@@ -803,7 +803,7 @@ const Index = () => {
               <div className="bg-primary p-2 rounded-lg">
                 <Icon name="Users" className="text-white" size={24} />
               </div>
-              <h1 className="text-xl font-bold text-gray-900">Employee Manager</h1>
+              <h1 className="text-xl font-bold text-gray-900">Сервис помощи любимым связистам</h1>
             </div>
             <nav className="flex space-x-8">
               {[
