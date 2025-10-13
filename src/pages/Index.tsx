@@ -391,7 +391,7 @@ const Index = () => {
         <div className="flex space-x-3">
           <Dialog open={isManageEmployeeOpen} onOpenChange={setIsManageEmployeeOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" onClick={() => handleManageEmployee('add')}>Добавление сотрудника</Button>
+              <Button variant="outline" onClick={() => handleManageEmployee('add')}>⚙️Добавление сотрудника</Button>
             </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
