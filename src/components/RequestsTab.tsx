@@ -126,7 +126,7 @@ export const RequestsTab = ({ requests, requestsLoading, updateRequestStatus }: 
                       {request.employees.length > 1 && ` • ${request.employees.length} сотрудников`}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {new Date(request.created_at).toLocaleDateString('ru-RU', {
+                      Создано: {new Date(request.created_at).toLocaleDateString('ru-RU', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',
@@ -134,6 +134,9 @@ export const RequestsTab = ({ requests, requestsLoading, updateRequestStatus }: 
                         minute: '2-digit'
                       })}
                     </p>
+                    {request.outgoing_number && (
+                      <p className="text-xs font-medium text-gray-700 mt-1">{request.outgoing_number}</p>
+                    )}
                     {request.notes && (
                       <p className="text-xs text-gray-600 mt-1">{request.notes}</p>
                     )}

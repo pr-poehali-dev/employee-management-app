@@ -83,9 +83,9 @@ function EmployeeDetailsModal({ employee, isOpen, onClose }: EmployeeDetailsModa
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'pending': return 'Ожидание';
-      case 'approved': return 'Согласовано';
+      case 'approved': return 'Исполнено';
       case 'completed': return 'Выполнено';
-      case 'rejected': return 'Отклонено';
+      case 'rejected': return 'Не исполнено';
       default: return status;
     }
   };
