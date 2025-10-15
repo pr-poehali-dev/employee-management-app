@@ -53,17 +53,15 @@ function EmployeeDetailsModal({ employee, isOpen, onClose }: EmployeeDetailsModa
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      console.log('Полученные данные заявок:', data);
-      console.log('ID текущего сотрудника:', employee.id);
       
-      const employeeRequests = Array.isArray(data) 
-        ? data.filter((req: Request) => 
+      const requestsArray = data.requests || data;
+      const employeeRequests = Array.isArray(requestsArray) 
+        ? requestsArray.filter((req: Request) => 
             req.employees && Array.isArray(req.employees) && 
             req.employees.some(emp => emp.id === employee.id)
           )
         : [];
       
-      console.log('Отфильтрованные заявки сотрудника:', employeeRequests);
       setRequests(employeeRequests);
     } catch (error) {
       console.error('Ошибка загрузки заявок:', error);
