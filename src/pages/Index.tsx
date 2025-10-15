@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,105 +9,24 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Separator } from '@/components/ui/separator';
 import Icon from '@/components/ui/icon';
 
-// Mock data for MVD employees
-const mockEmployees = [
-  { 
-    id: 1, 
-    last_name: 'Петрова', 
-    first_name: 'Анна', 
-    middle_name: 'Ивановна',
-    position: 'Инженер-программист', 
-    rank: 'лейтенант полиции',
-    service: 'ИТС', 
-    department: 'ОИТ', 
-    address: 'г. Москва, ул. Петровка, 38',
-    office: '301',
-    phone: '+7(495)123-45-67',
-    sudis_login: 'petrova_ai',
-    official_email: 'petrova_ai@mvd.ru',
-    status: 'active'
-  },
-  { 
-    id: 2, 
-    last_name: 'Иванов', 
-    first_name: 'Михаил', 
-    middle_name: 'Сергеевич',
-    position: 'Старший инженер-программист', 
-    rank: 'старший лейтенант полиции',
-    service: 'ИТС', 
-    department: 'ОИТ', 
-    address: 'г. Москва, ул. Петровка, 38',
-    office: '302',
-    phone: '+7(495)123-45-68',
-    sudis_login: 'ivanov_ms',
-    official_email: 'ivanov_ms@mvd.ru',
-    status: 'active'
-  },
-  { 
-    id: 3, 
-    last_name: 'Сидорова', 
-    first_name: 'Елена', 
-    middle_name: 'Александровна',
-    position: 'Специалист по кадрам', 
-    rank: 'майор полиции',
-    service: 'ОК', 
-    department: 'УК', 
-    address: 'г. Москва, ул. Петровка, 38',
-    office: '201',
-    phone: '+7(495)123-45-69',
-    sudis_login: 'sidorova_ea',
-    official_email: 'sidorova_ea@mvd.ru',
-    status: 'inactive'
-  },
-  { 
-    id: 4, 
-    last_name: 'Козлов', 
-    first_name: 'Дмитрий', 
-    middle_name: 'Петрович',
-    position: 'Системный администратор', 
-    rank: 'капитан полиции',
-    service: 'ИТС', 
-    department: 'ОИТ', 
-    address: 'г. Москва, ул. Петровка, 38',
-    office: '303',
-    phone: '+7(495)123-45-70',
-    sudis_login: 'kozlov_dp',
-    official_email: 'kozlov_dp@mvd.ru',
-    status: 'active'
-  },
-  { 
-    id: 5, 
-    last_name: 'Смирнова', 
-    first_name: 'Ольга', 
-    middle_name: 'Викторовна',
-    position: 'Начальник отдела', 
-    rank: 'подполковник полиции',
-    service: 'АХО', 
-    department: 'АХО', 
-    address: 'г. Москва, ул. Петровка, 38',
-    office: '401',
-    phone: '+7(495)123-45-71',
-    sudis_login: 'smirnova_ov',
-    official_email: 'smirnova_ov@mvd.ru',
-    status: 'active'
-  },
-  { 
-    id: 6, 
-    last_name: 'Федоров', 
-    first_name: 'Александр', 
-    middle_name: 'Николаевич',
-    position: 'Дизайнер', 
-    rank: 'прапорщик полиции',
-    service: 'ИТС', 
-    department: 'ОИТ', 
-    address: 'г. Москва, ул. Петровка, 38',
-    office: '304',
-    phone: '+7(495)123-45-72',
-    sudis_login: 'fedorov_an',
-    official_email: 'fedorov_an@mvd.ru',
-    status: 'active'
-  }
-];
+const API_URL = 'https://functions.poehali.dev/37ade4d6-e5ff-4e65-a066-98725ef8974c';
+
+interface Employee {
+  id: number;
+  last_name: string;
+  first_name: string;
+  middle_name?: string;
+  position: string;
+  rank: string;
+  service: string;
+  department: string;
+  address: string;
+  office: string;
+  phone: string;
+  sudis_login: string;
+  official_email: string;
+  status: string;
+}
 
 // Request types configuration
 const requestTypes = {
@@ -163,6 +82,8 @@ const Index = () => {
   const [isManageEmployeeOpen, setIsManageEmployeeOpen] = useState(false);
   const [manageAction, setManageAction] = useState<'add' | 'edit' | 'delete'>('add');
   const [editingEmployee, setEditingEmployee] = useState<any>(null);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
   const [employeeForm, setEmployeeForm] = useState({
     last_name: '',
     first_name: '',
@@ -178,7 +99,26 @@ const Index = () => {
     status: 'active'
   });
 
-  const filteredEmployees = mockEmployees.filter(employee => {
+  useEffect(() => {
+    loadEmployees();
+  }, []);
+
+  const loadEmployees = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_URL}?action=list`);
+      const data = await response.json();
+      if (data.employees) {
+        setEmployees(data.employees);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки сотрудников:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredEmployees = employees.filter(employee => {
     const fullName = `${employee.last_name} ${employee.first_name} ${employee.middle_name || ''}`;
     const matchesSearch = fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          employee.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -189,10 +129,10 @@ const Index = () => {
   });
 
   const stats = {
-    totalEmployees: mockEmployees.length,
-    activeEmployees: mockEmployees.filter(e => e.status === 'active').length,
+    totalEmployees: employees.length,
+    activeEmployees: employees.filter(e => e.status === 'active').length,
     pendingRequests: mockRequests.filter(r => r.status === 'pending').length,
-    departments: [...new Set(mockEmployees.map(e => e.service))].length
+    departments: [...new Set(employees.map(e => e.service))].length
   };
 
   const handleEmployeeSelect = (employeeId: number) => {
@@ -212,9 +152,10 @@ const Index = () => {
   };
 
   const createRequest = () => {
-    const employeeNames = selectedEmployees.map(id => 
-      mockEmployees.find(e => e.id === id)?.name
-    ).join(', ');
+    const employeeNames = selectedEmployees.map(id => {
+      const emp = employees.find(e => e.id === id);
+      return emp ? `${emp.last_name} ${emp.first_name}` : '';
+    }).join(', ');
     
     const typeLabel = getRequestTypeLabel(requestType);
     alert(`Заявка на "${typeLabel}" для: ${employeeNames}`);
@@ -258,23 +199,66 @@ const Index = () => {
     setIsManageEmployeeOpen(true);
   };
 
-  const saveEmployee = () => {
-    if (manageAction === 'add') {
-      const fullName = `${employeeForm.last_name} ${employeeForm.first_name} ${employeeForm.middle_name}`;
-      const officialEmail = `${employeeForm.sudis_login}@mvd.ru`;
-      alert(`Добавлен новый сотрудник: ${fullName}\nСлужебная почта: ${officialEmail}`);
-    } else if (manageAction === 'edit') {
-      const fullName = `${editingEmployee.last_name} ${editingEmployee.first_name} ${editingEmployee.middle_name}`;
-      alert(`Данные сотрудника ${fullName} обновлены`);
-    } else if (manageAction === 'delete') {
-      const employeeNames = selectedEmployees.map(id => {
-        const emp = mockEmployees.find(e => e.id === id);
-        return emp ? `${emp.last_name} ${emp.first_name}` : '';
-      }).join(', ');
-      alert(`Удалены сотрудники: ${employeeNames}`);
-      setSelectedEmployees([]);
+  const saveEmployee = async () => {
+    try {
+      if (manageAction === 'add') {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'create',
+            employee: {
+              ...employeeForm,
+              official_email: `${employeeForm.sudis_login}@mvd.ru`
+            }
+          })
+        });
+        const data = await response.json();
+        if (data.success) {
+          const fullName = `${employeeForm.last_name} ${employeeForm.first_name} ${employeeForm.middle_name}`;
+          alert(`Добавлен новый сотрудник: ${fullName}\nСлужебная почта: ${employeeForm.sudis_login}@mvd.ru`);
+          await loadEmployees();
+        }
+      } else if (manageAction === 'edit') {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'update',
+            id: editingEmployee.id,
+            employee: {
+              ...employeeForm,
+              official_email: `${employeeForm.sudis_login}@mvd.ru`
+            }
+          })
+        });
+        const data = await response.json();
+        if (data.success) {
+          const fullName = `${employeeForm.last_name} ${employeeForm.first_name} ${employeeForm.middle_name}`;
+          alert(`Данные сотрудника ${fullName} обновлены`);
+          await loadEmployees();
+        }
+      } else if (manageAction === 'delete') {
+        for (const id of selectedEmployees) {
+          await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'delete', id })
+          });
+        }
+        const employeeNames = selectedEmployees.map(id => {
+          const emp = employees.find(e => e.id === id);
+          return emp ? `${emp.last_name} ${emp.first_name}` : '';
+        }).join(', ');
+        alert(`Удалены сотрудники: ${employeeNames}`);
+        setSelectedEmployees([]);
+        await loadEmployees();
+      }
+      setIsManageEmployeeOpen(false);
+    } catch (error) {
+      console.error('Ошибка сохранения:', error);
+      alert('Произошла ошибка при сохранении данных');
     }
-    setIsManageEmployeeOpen(false);
   };
 
   const renderDashboard = () => (
@@ -513,6 +497,14 @@ const Index = () => {
                       />
                     </div>
                     <div>
+                      <label className="text-sm font-medium mb-2 block">Адрес</label>
+                      <Input
+                        value={employeeForm.address}
+                        onChange={(e) => setEmployeeForm({...employeeForm, address: e.target.value})}
+                        placeholder="напр. г. Москва, ул. Петровка, 38"
+                      />
+                    </div>
+                    <div>
                       <label className="text-sm font-medium mb-2 block">Статус</label>
                       <Select value={employeeForm.status} onValueChange={(value) => setEmployeeForm({...employeeForm, status: value})}>
                         <SelectTrigger>
@@ -604,8 +596,12 @@ const Index = () => {
                     <p className="text-gray-500">Выберите сотрудников в списке</p>
                   ) : (
                     selectedEmployees.map(id => {
-                      const employee = mockEmployees.find(e => e.id === id);
-                      return <div key={id} className="py-1">{employee?.name}</div>;
+                      const employee = employees.find(e => e.id === id);
+                      return employee ? (
+                        <div key={id} className="py-1">
+                          {employee.last_name} {employee.first_name}
+                        </div>
+                      ) : null;
                     })
                   )}
                 </div>
@@ -652,8 +648,17 @@ const Index = () => {
           </Select>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredEmployees.map(employee => (
+        {loading ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">Загрузка сотрудников...</p>
+          </div>
+        ) : filteredEmployees.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">Сотрудники не найдены</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredEmployees.map(employee => (
             <Card 
               key={employee.id} 
               className={`p-4 cursor-pointer transition-all duration-200 hover:shadow-md group ${
@@ -735,7 +740,8 @@ const Index = () => {
               </div>
             </Card>
           ))}
-        </div>
+          </div>
+        )}
       </Card>
     </div>
   );
