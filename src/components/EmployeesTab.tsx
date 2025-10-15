@@ -172,8 +172,8 @@ export const EmployeesTab = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Все статусы</SelectItem>
-              <SelectItem value="active">Активные</SelectItem>
-              <SelectItem value="inactive">Неактивные</SelectItem>
+              <SelectItem value="active">Действующие</SelectItem>
+              <SelectItem value="inactive">Уволенные</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -227,7 +227,7 @@ export const EmployeesTab = ({
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Статус:</span>
                   <Badge variant={employee.status === 'active' ? 'default' : 'secondary'}>
-                    {employee.status === 'active' ? 'Активен' : 'Неактивен'}
+                    {employee.status === 'active' ? 'Действующий' : 'Уволен'}
                   </Badge>
                 </div>
                 <div className="flex items-center space-x-2 text-sm text-gray-600">

@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Employee } from '@/types';
 
 interface EmployeeManageDialogProps {
@@ -145,6 +146,20 @@ export const EmployeeManageDialog = ({
                   placeholder="Введите логин"
                 />
               </div>
+              {action === 'edit' && (
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Статус</label>
+                  <Select value={employeeForm.status} onValueChange={(value) => setEmployeeForm({...employeeForm, status: value})}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Действующий</SelectItem>
+                      <SelectItem value="inactive">Уволен</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </>
           )}
           <Button onClick={onSave} className="w-full">
