@@ -49,13 +49,25 @@ function EmployeeDetailsModal({ employee, isOpen, onClose }: EmployeeDetailsModa
     setLoadingRequests(true);
     try {
       const response = await fetch(REQUESTS_API_URL);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
-      const employeeRequests = data.filter((req: Request) => 
-        req.employees.some(emp => emp.id === employee.id)
-      );
+      console.log('Полученные данные заявок:', data);
+      console.log('ID текущего сотрудника:', employee.id);
+      
+      const employeeRequests = Array.isArray(data) 
+        ? data.filter((req: Request) => 
+            req.employees && Array.isArray(req.employees) && 
+            req.employees.some(emp => emp.id === employee.id)
+          )
+        : [];
+      
+      console.log('Отфильтрованные заявки сотрудника:', employeeRequests);
       setRequests(employeeRequests);
     } catch (error) {
       console.error('Ошибка загрузки заявок:', error);
+      setRequests([]);
     } finally {
       setLoadingRequests(false);
     }
