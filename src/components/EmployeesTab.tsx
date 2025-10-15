@@ -192,7 +192,8 @@ export const EmployeesTab = ({
             <Card 
               key={employee.id} 
               className={`p-4 cursor-pointer transition-all duration-200 hover:shadow-md group ${
-                selectedEmployees.includes(employee.id) ? 'ring-2 ring-primary bg-blue-50' : ''
+                selectedEmployees.includes(employee.id) ? 'ring-2 ring-primary bg-blue-50' : 
+                employee.status === 'inactive' ? 'bg-red-50' : ''
               }`}
               onClick={() => handleEmployeeSelect(employee.id)}
             >
