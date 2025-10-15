@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
 import { Employee, Request, Tab, API_URL, REQUESTS_API_URL } from '@/types';
 import { Dashboard } from '@/components/Dashboard';
-import { EmployeesTab } from '@/components/EmployeesTab';
+import EmployeesTab from '@/components/EmployeesTab';
 import { RequestsTab } from '@/components/RequestsTab';
 import { EmployeeManageDialog } from '@/components/EmployeeManageDialog';
 
