@@ -80,8 +80,8 @@ export const RequestsTab = ({ requests, requestsLoading, updateRequestStatus }: 
                     request.status === 'completed' ? 'secondary' : 'destructive'
                   }>
                     {request.status === 'pending' ? 'Ожидает' : 
-                     request.status === 'approved' ? 'Одобрено' : 
-                     request.status === 'completed' ? 'Выполнено' : 'Отклонено'}
+                     request.status === 'approved' ? 'Исполнено' : 
+                     request.status === 'completed' ? 'Выполнено' : 'Не исполнено'}
                   </Badge>
                   {request.status === 'pending' && (
                     <div className="flex space-x-2">

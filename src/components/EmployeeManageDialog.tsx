@@ -26,7 +26,7 @@ export const EmployeeManageDialog = ({
 }: EmployeeManageDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {action === 'add' ? 'Добавить сотрудника' : 
@@ -34,7 +34,7 @@ export const EmployeeManageDialog = ({
              'Удалить сотрудников'}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="space-y-4 pb-4">
           {action === 'delete' ? (
             <div>
               <p className="text-sm text-gray-600 mb-3">

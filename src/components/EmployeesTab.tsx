@@ -57,7 +57,10 @@ export const EmployeesTab = ({
         <div className="flex space-x-3">
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" onClick={() => handleManageEmployee('add')}>⚙️Добавление сотрудника</Button>
+              <Button variant="outline" onClick={() => handleManageEmployee('add')}>
+                <Icon name="UserPlus" size={18} className="mr-2" />
+                Добавить сотрудника
+              </Button>
             </DialogTrigger>
           </Dialog>
           <Button 
@@ -65,12 +68,14 @@ export const EmployeesTab = ({
             onClick={() => handleManageEmployee('delete')}
             disabled={selectedEmployees.length === 0}
           >
-            🗑️ Удаление сотрудников
+            <Icon name="Trash2" size={18} className="mr-2" />
+            Удалить сотрудников
           </Button>
           <Dialog>
             <DialogTrigger asChild>
               <Button disabled={selectedEmployees.length === 0}>
-                📝 Создать заявку
+                <Icon name="FilePlus" size={18} className="mr-2" />
+                Создать заявку
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md">

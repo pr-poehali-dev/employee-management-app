@@ -111,8 +111,8 @@ export const Dashboard = ({ employees, requests, requestsLoading }: DashboardPro
                     request.status === 'completed' ? 'secondary' : 'destructive'
                   }>
                     {request.status === 'pending' ? 'Ожидает' : 
-                     request.status === 'approved' ? 'Одобрено' : 
-                     request.status === 'completed' ? 'Выполнено' : 'Отклонено'}
+                     request.status === 'approved' ? 'Исполнено' : 
+                     request.status === 'completed' ? 'Выполнено' : 'Не исполнено'}
                   </Badge>
                 </div>
               ))
