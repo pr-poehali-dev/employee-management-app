@@ -9,6 +9,7 @@ import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from typing import Dict, Any
+import uuid
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     method: str = event.get('httpMethod', 'GET')
@@ -54,6 +55,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         r.created_at,
                         r.updated_at,
                         r.approved_at,
+                        r.request_group_id,
                         e.id as employee_id,
                         e.last_name,
                         e.first_name,
@@ -74,28 +76,35 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 cursor.execute(query)
                 requests = cursor.fetchall()
                 
-                requests_list = []
+                grouped_requests = {}
                 for req in requests:
-                    requests_list.append({
-                        'id': req['id'],
-                        'request_type': req['request_type'],
-                        'request_category': req['request_category'],
-                        'status': req['status'],
-                        'notes': req['notes'],
-                        'created_at': req['created_at'].isoformat() if req['created_at'] else None,
-                        'updated_at': req['updated_at'].isoformat() if req['updated_at'] else None,
-                        'approved_at': req['approved_at'].isoformat() if req['approved_at'] else None,
-                        'employee': {
-                            'id': req['employee_id'],
-                            'last_name': req['last_name'],
-                            'first_name': req['first_name'],
-                            'middle_name': req['middle_name'],
-                            'position': req['position'],
-                            'rank': req['rank'],
-                            'service': req['service'],
-                            'department': req['department']
+                    group_id = req['request_group_id']
+                    if group_id not in grouped_requests:
+                        grouped_requests[group_id] = {
+                            'id': req['id'],
+                            'request_group_id': group_id,
+                            'request_type': req['request_type'],
+                            'request_category': req['request_category'],
+                            'status': req['status'],
+                            'notes': req['notes'],
+                            'created_at': req['created_at'].isoformat() if req['created_at'] else None,
+                            'updated_at': req['updated_at'].isoformat() if req['updated_at'] else None,
+                            'approved_at': req['approved_at'].isoformat() if req['approved_at'] else None,
+                            'employees': []
                         }
+                    
+                    grouped_requests[group_id]['employees'].append({
+                        'id': req['employee_id'],
+                        'last_name': req['last_name'],
+                        'first_name': req['first_name'],
+                        'middle_name': req['middle_name'],
+                        'position': req['position'],
+                        'rank': req['rank'],
+                        'service': req['service'],
+                        'department': req['department']
                     })
+                
+                requests_list = list(grouped_requests.values())
                 
                 cursor.close()
                 conn.close()
@@ -120,14 +129,16 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 request_category = body_data.get('request_category')
                 notes = body_data.get('notes', '')
                 
+                group_id = f'group_{uuid.uuid4().hex[:12]}'
+                
                 created_ids = []
                 for employee_id in employee_ids:
                     cursor.execute('''
                         INSERT INTO t_p46137463_employee_management_.requests 
-                        (employee_id, request_type, request_category, notes, status)
-                        VALUES (%s, %s, %s, %s, %s)
+                        (employee_id, request_type, request_category, notes, status, request_group_id)
+                        VALUES (%s, %s, %s, %s, %s, %s)
                         RETURNING id
-                    ''', (employee_id, request_type, request_category, notes, 'pending'))
+                    ''', (employee_id, request_type, request_category, notes, 'pending', group_id))
                     
                     new_id = cursor.fetchone()['id']
                     created_ids.append(new_id)
@@ -148,14 +159,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 }
             
             elif action == 'update_status':
-                request_id = body_data.get('id')
+                request_group_id = body_data.get('request_group_id')
                 new_status = body_data.get('status')
                 
                 cursor.execute('''
                     UPDATE t_p46137463_employee_management_.requests 
                     SET status=%s, updated_at=CURRENT_TIMESTAMP
-                    WHERE id=%s
-                ''', (new_status, request_id))
+                    WHERE request_group_id=%s
+                ''', (new_status, request_group_id))
                 
                 conn.commit()
                 cursor.close()

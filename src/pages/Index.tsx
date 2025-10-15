@@ -31,6 +31,7 @@ interface Employee {
 
 interface Request {
   id: number;
+  request_group_id: string;
   request_type: string;
   request_category: string;
   status: string;
@@ -38,7 +39,7 @@ interface Request {
   created_at: string;
   updated_at: string;
   approved_at: string | null;
-  employee: {
+  employees: {
     id: number;
     last_name: string;
     first_name: string;
@@ -47,7 +48,7 @@ interface Request {
     rank: string;
     service: string;
     department: string;
-  };
+  }[];
 }
 
 // Request types configuration
@@ -385,13 +386,17 @@ const Index = () => {
               <p className="text-gray-500 text-sm">Нет заявок</p>
             ) : (
               requests.slice(0, 3).map(request => (
-                <div key={request.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={request.request_group_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
                     <p className="font-medium">
-                      {request.employee.last_name} {request.employee.first_name} {request.employee.middle_name}
+                      {request.employees.length === 1 ? (
+                        `${request.employees[0].last_name} ${request.employees[0].first_name} ${request.employees[0].middle_name || ''}`
+                      ) : (
+                        `${request.employees.length} сотрудников`
+                      )}
                     </p>
                     <p className="text-sm text-gray-600">
-                      {getRequestTypeLabel(request.request_type)} • {request.employee.service}
+                      {getRequestTypeLabel(request.request_type)}
                     </p>
                   </div>
                   <Badge variant={
@@ -817,14 +822,14 @@ const Index = () => {
     </div>
   );
 
-  const updateRequestStatus = async (requestId: number, newStatus: string) => {
+  const updateRequestStatus = async (requestGroupId: string, newStatus: string) => {
     try {
       const response = await fetch(REQUESTS_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'update_status',
-          id: requestId,
+          request_group_id: requestGroupId,
           status: newStatus
         })
       });
@@ -857,7 +862,7 @@ const Index = () => {
         ) : (
           <div className="space-y-4">
             {requests.map(request => (
-              <div key={request.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+              <div key={request.request_group_id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                 <div className="flex items-center space-x-4">
                   <div className="p-2 rounded-full bg-blue-100">
                     <Icon 
@@ -868,10 +873,15 @@ const Index = () => {
                   </div>
                   <div>
                     <h3 className="font-semibold">
-                      {request.employee.last_name} {request.employee.first_name} {request.employee.middle_name}
+                      {request.employees.length === 1 ? (
+                        `${request.employees[0].last_name} ${request.employees[0].first_name} ${request.employees[0].middle_name || ''}`
+                      ) : (
+                        request.employees.map(emp => `${emp.last_name} ${emp.first_name[0]}.`).join(', ')
+                      )}
                     </h3>
                     <p className="text-sm text-gray-600">
-                      {getRequestTypeLabel(request.request_type)} • {request.employee.service}
+                      {getRequestTypeLabel(request.request_type)}
+                      {request.employees.length > 1 && ` • ${request.employees.length} сотрудников`}
                     </p>
                     <p className="text-xs text-gray-500">
                       {new Date(request.created_at).toLocaleDateString('ru-RU', {
@@ -903,7 +913,7 @@ const Index = () => {
                         size="sm" 
                         variant="outline" 
                         className="text-green-600 border-green-600 hover:bg-green-50"
-                        onClick={() => updateRequestStatus(request.id, 'approved')}
+                        onClick={() => updateRequestStatus(request.request_group_id, 'approved')}
                       >
                         <Icon name="Check" size={16} />
                       </Button>
@@ -911,7 +921,7 @@ const Index = () => {
                         size="sm" 
                         variant="outline" 
                         className="text-red-600 border-red-600 hover:bg-red-50"
-                        onClick={() => updateRequestStatus(request.id, 'rejected')}
+                        onClick={() => updateRequestStatus(request.request_group_id, 'rejected')}
                       >
                         <Icon name="X" size={16} />
                       </Button>
