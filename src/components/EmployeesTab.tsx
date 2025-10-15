@@ -6,7 +6,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import Icon from '@/components/ui/icon';
-import { Employee, requestTypes } from '@/types';
+import { Employee, requestTypes, Request, REQUESTS_API_URL } from '@/types';
+import { useState, useEffect } from 'react';
 
 interface EmployeesTabProps {
   employees: Employee[];
@@ -28,7 +29,155 @@ interface EmployeesTabProps {
   filteredEmployees: Employee[];
 }
 
-export const EmployeesTab = ({
+interface EmployeeDetailsModalProps {
+  employee: Employee;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+function EmployeeDetailsModal({ employee, isOpen, onClose }: EmployeeDetailsModalProps) {
+  const [requests, setRequests] = useState<Request[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && employee) {
+      fetchEmployeeRequests();
+    }
+  }, [isOpen, employee]);
+
+  const fetchEmployeeRequests = async () => {
+    setLoadingRequests(true);
+    try {
+      const response = await fetch(REQUESTS_API_URL);
+      const data = await response.json();
+      const employeeRequests = data.filter((req: Request) => 
+        req.employees.some(emp => emp.id === employee.id)
+      );
+      setRequests(employeeRequests);
+    } catch (error) {
+      console.error('Ошибка загрузки заявок:', error);
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'pending': return 'secondary';
+      case 'approved': return 'default';
+      case 'completed': return 'outline';
+      default: return 'secondary';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'pending': return 'Ожидание';
+      case 'approved': return 'Согласовано';
+      case 'completed': return 'Выполнено';
+      default: return status;
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Информация о сотруднике</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-6">
+          <div className="flex items-start space-x-4">
+            <Avatar className="h-16 w-16">
+              <AvatarFallback className="bg-primary text-primary-foreground text-xl">
+                {employee.last_name[0]}{employee.first_name[0]}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {employee.last_name} {employee.first_name} {employee.middle_name}
+              </h2>
+              <p className="text-lg text-gray-700">{employee.position}</p>
+              <p className="text-sm text-gray-600">{employee.rank}</p>
+            </div>
+            <Badge variant={employee.status === 'active' ? 'default' : 'secondary'}>
+              {employee.status === 'active' ? 'Действующий' : 'Уволен'}
+            </Badge>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Служба</p>
+              <p className="text-base text-gray-900">{employee.service}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Подразделение</p>
+              <p className="text-base text-gray-900">{employee.department}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Адрес</p>
+              <p className="text-base text-gray-900">{employee.address}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Кабинет</p>
+              <p className="text-base text-gray-900">{employee.office}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Телефон</p>
+              <p className="text-base text-gray-900">{employee.phone}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Email</p>
+              <p className="text-base text-gray-900">{employee.official_email}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600">Логин СУДИС</p>
+              <p className="text-base text-gray-900">{employee.sudis_login}</p>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold mb-3">История заявок</h3>
+            {loadingRequests ? (
+              <p className="text-gray-600">Загрузка заявок...</p>
+            ) : requests.length === 0 ? (
+              <p className="text-gray-600">Заявки на этого сотрудника не найдены</p>
+            ) : (
+              <div className="space-y-3">
+                {requests.map(request => (
+                  <Card key={request.id} className="p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <Badge variant="outline">{request.request_category}</Badge>
+                          <Badge variant={getStatusBadgeVariant(request.status)}>
+                            {getStatusLabel(request.status)}
+                          </Badge>
+                        </div>
+                        <p className="text-sm font-medium text-gray-900">{request.request_type}</p>
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-500 space-y-1">
+                      <p>Создано: {new Date(request.created_at).toLocaleString('ru-RU')}</p>
+                      {request.approved_at && (
+                        <p>Согласовано: {new Date(request.approved_at).toLocaleString('ru-RU')}</p>
+                      )}
+                    </div>
+                    {request.notes && (
+                      <p className="text-sm text-gray-600 mt-2">{request.notes}</p>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export default function EmployeesTab({
   employees,
   loading,
   searchTerm,
@@ -46,8 +195,16 @@ export const EmployeesTab = ({
   setRequestType,
   createRequest,
   filteredEmployees
-}: EmployeesTabProps) => {
+}: EmployeesTabProps) {
+  const [selectedEmployeeForDetails, setSelectedEmployeeForDetails] = useState<Employee | null>(null);
+  
   return (
+    <>
+      <EmployeeDetailsModal 
+        employee={selectedEmployeeForDetails!} 
+        isOpen={!!selectedEmployeeForDetails} 
+        onClose={() => setSelectedEmployeeForDetails(null)}
+      />
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
@@ -249,6 +406,17 @@ export const EmployeesTab = ({
                     variant="outline" 
                     onClick={(e) => {
                       e.stopPropagation();
+                      setSelectedEmployeeForDetails(employee);
+                    }}
+                    className="text-green-600 border-green-600 hover:bg-green-50"
+                  >
+                    <Icon name="Eye" size={14} />
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={(e) => {
+                      e.stopPropagation();
                       handleManageEmployee('edit', employee);
                     }}
                     className="text-blue-600 border-blue-600 hover:bg-blue-50"
@@ -273,6 +441,6 @@ export const EmployeesTab = ({
           </div>
         )}
       </Card>
-    </div>
+    </>
   );
-};
+}
