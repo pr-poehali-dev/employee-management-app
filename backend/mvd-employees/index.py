@@ -200,6 +200,11 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
         
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f'ERROR: {str(e)}')
+        print(f'TRACE: {error_trace}')
+        
         return {
             'statusCode': 500,
             'headers': {
@@ -209,6 +214,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'isBase64Encoded': False,
             'body': json.dumps({
                 'success': False,
-                'error': str(e)
+                'error': str(e),
+                'trace': error_trace
             }, ensure_ascii=False)
         }
