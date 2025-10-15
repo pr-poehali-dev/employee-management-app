@@ -1,0 +1,114 @@
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import Icon from '@/components/ui/icon';
+import { Request, requestTypes } from '@/types';
+
+interface RequestsTabProps {
+  requests: Request[];
+  requestsLoading: boolean;
+  updateRequestStatus: (groupId: string, status: string) => void;
+}
+
+const getRequestTypeLabel = (type: string) => {
+  for (const category of Object.values(requestTypes)) {
+    const subtype = category.subtypes.find(st => st.value === type);
+    if (subtype) return subtype.label;
+  }
+  return type;
+};
+
+export const RequestsTab = ({ requests, requestsLoading, updateRequestStatus }: RequestsTabProps) => {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Заявки</h1>
+        <p className="text-gray-600">Управление заявками на создание и удаление учетных записей</p>
+      </div>
+
+      <Card className="p-6">
+        {requestsLoading ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">Загрузка заявок...</p>
+          </div>
+        ) : requests.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">Заявок пока нет</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {requests.map(request => (
+              <div key={request.request_group_id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                <div className="flex items-center space-x-4">
+                  <div className="p-2 rounded-full bg-blue-100">
+                    <Icon 
+                      name="FileText" 
+                      className="text-blue-600" 
+                      size={20} 
+                    />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">
+                      {request.employees.length === 1 ? (
+                        `${request.employees[0].last_name} ${request.employees[0].first_name} ${request.employees[0].middle_name || ''}`
+                      ) : (
+                        request.employees.map(emp => `${emp.last_name} ${emp.first_name[0]}.`).join(', ')
+                      )}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {getRequestTypeLabel(request.request_type)}
+                      {request.employees.length > 1 && ` • ${request.employees.length} сотрудников`}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(request.created_at).toLocaleDateString('ru-RU', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                    {request.notes && (
+                      <p className="text-xs text-gray-600 mt-1">{request.notes}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Badge variant={
+                    request.status === 'pending' ? 'default' : 
+                    request.status === 'approved' ? 'default' : 
+                    request.status === 'completed' ? 'secondary' : 'destructive'
+                  }>
+                    {request.status === 'pending' ? 'Ожидает' : 
+                     request.status === 'approved' ? 'Одобрено' : 
+                     request.status === 'completed' ? 'Выполнено' : 'Отклонено'}
+                  </Badge>
+                  {request.status === 'pending' && (
+                    <div className="flex space-x-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="text-green-600 border-green-600 hover:bg-green-50"
+                        onClick={() => updateRequestStatus(request.request_group_id, 'approved')}
+                      >
+                        <Icon name="Check" size={16} />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="text-red-600 border-red-600 hover:bg-red-50"
+                        onClick={() => updateRequestStatus(request.request_group_id, 'rejected')}
+                      >
+                        <Icon name="X" size={16} />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+};
