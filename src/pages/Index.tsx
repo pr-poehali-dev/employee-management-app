@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import Icon from '@/components/ui/icon';
 
 const API_URL = 'https://functions.poehali.dev/7bc58754-feed-404f-8d54-83526deaa4b7';
+const REQUESTS_API_URL = 'https://functions.poehali.dev/3e113ae9-a20c-4ea9-8c52-d142fe1b2c59';
 
 interface Employee {
   id: number;
@@ -26,6 +27,27 @@ interface Employee {
   sudis_login: string;
   official_email: string;
   status: string;
+}
+
+interface Request {
+  id: number;
+  request_type: string;
+  request_category: string;
+  status: string;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+  approved_at: string | null;
+  employee: {
+    id: number;
+    last_name: string;
+    first_name: string;
+    middle_name?: string;
+    position: string;
+    rank: string;
+    service: string;
+    department: string;
+  };
 }
 
 // Request types configuration
@@ -84,6 +106,8 @@ const Index = () => {
   const [editingEmployee, setEditingEmployee] = useState<any>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
+  const [requests, setRequests] = useState<Request[]>([]);
+  const [requestsLoading, setRequestsLoading] = useState(true);
   const [employeeForm, setEmployeeForm] = useState({
     last_name: '',
     first_name: '',
@@ -101,6 +125,7 @@ const Index = () => {
 
   useEffect(() => {
     loadEmployees();
+    loadRequests();
   }, []);
 
   const loadEmployees = async () => {
@@ -118,6 +143,21 @@ const Index = () => {
     }
   };
 
+  const loadRequests = async () => {
+    try {
+      setRequestsLoading(true);
+      const response = await fetch(`${REQUESTS_API_URL}?action=list`);
+      const data = await response.json();
+      if (data.requests) {
+        setRequests(data.requests);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки заявок:', error);
+    } finally {
+      setRequestsLoading(false);
+    }
+  };
+
   const filteredEmployees = employees.filter(employee => {
     const fullName = `${employee.last_name} ${employee.first_name} ${employee.middle_name || ''}`;
     const matchesSearch = fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -131,7 +171,7 @@ const Index = () => {
   const stats = {
     totalEmployees: employees.length,
     activeEmployees: employees.filter(e => e.status === 'active').length,
-    pendingRequests: mockRequests.filter(r => r.status === 'pending').length,
+    pendingRequests: requests.filter(r => r.status === 'pending').length,
     departments: [...new Set(employees.map(e => e.service))].length
   };
 
@@ -151,15 +191,30 @@ const Index = () => {
     return type;
   };
 
-  const createRequest = () => {
-    const employeeNames = selectedEmployees.map(id => {
-      const emp = employees.find(e => e.id === id);
-      return emp ? `${emp.last_name} ${emp.first_name}` : '';
-    }).join(', ');
-    
-    const typeLabel = getRequestTypeLabel(requestType);
-    alert(`Заявка на "${typeLabel}" для: ${employeeNames}`);
-    setSelectedEmployees([]);
+  const createRequest = async () => {
+    try {
+      const response = await fetch(REQUESTS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create',
+          employee_ids: selectedEmployees,
+          request_type: requestType,
+          request_category: requestCategory,
+          notes: ''
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        alert(`Создано заявок: ${data.request_ids.length}`);
+        setSelectedEmployees([]);
+        await loadRequests();
+      }
+    } catch (error) {
+      console.error('Ошибка создания заявки:', error);
+      alert('Не удалось создать заявку');
+    }
   };
 
   const handleManageEmployee = (action: 'add' | 'edit' | 'delete', employee?: any) => {
@@ -324,17 +379,33 @@ const Index = () => {
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Последние заявки</h3>
           <div className="space-y-4">
-            {mockRequests.slice(0, 3).map(request => (
-              <div key={request.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium">{request.employee}</p>
-                  <p className="text-sm text-gray-600">{getRequestTypeLabel(request.type)} • {request.department}</p>
+            {requestsLoading ? (
+              <p className="text-gray-500 text-sm">Загрузка заявок...</p>
+            ) : requests.length === 0 ? (
+              <p className="text-gray-500 text-sm">Нет заявок</p>
+            ) : (
+              requests.slice(0, 3).map(request => (
+                <div key={request.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="font-medium">
+                      {request.employee.last_name} {request.employee.first_name} {request.employee.middle_name}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {getRequestTypeLabel(request.request_type)} • {request.employee.service}
+                    </p>
+                  </div>
+                  <Badge variant={
+                    request.status === 'pending' ? 'default' : 
+                    request.status === 'approved' ? 'default' : 
+                    request.status === 'completed' ? 'secondary' : 'destructive'
+                  }>
+                    {request.status === 'pending' ? 'Ожидает' : 
+                     request.status === 'approved' ? 'Одобрено' : 
+                     request.status === 'completed' ? 'Выполнено' : 'Отклонено'}
+                  </Badge>
                 </div>
-                <Badge variant={request.status === 'pending' ? 'default' : request.status === 'approved' ? 'default' : 'destructive'}>
-                  {request.status === 'pending' ? 'Ожидает' : request.status === 'approved' ? 'Одобрено' : 'Отклонено'}
-                </Badge>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </Card>
 
@@ -746,6 +817,27 @@ const Index = () => {
     </div>
   );
 
+  const updateRequestStatus = async (requestId: number, newStatus: string) => {
+    try {
+      const response = await fetch(REQUESTS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_status',
+          id: requestId,
+          status: newStatus
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        await loadRequests();
+      }
+    } catch (error) {
+      console.error('Ошибка обновления статуса:', error);
+    }
+  };
+
   const renderRequests = () => (
     <div className="space-y-6">
       <div>
@@ -754,47 +846,82 @@ const Index = () => {
       </div>
 
       <Card className="p-6">
-        <div className="space-y-4">
-          {mockRequests.map(request => (
-            <div key={request.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="flex items-center space-x-4">
-                <div className="p-2 rounded-full bg-blue-100">
-                  <Icon 
-                    name="FileText" 
-                    className="text-blue-600" 
-                    size={20} 
-                  />
-                </div>
-                <div>
-                  <h3 className="font-semibold">{request.employee}</h3>
-                  <p className="text-sm text-gray-600">
-                    {getRequestTypeLabel(request.type)} • {request.department}
-                  </p>
-                  <p className="text-xs text-gray-500">{request.date}</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Badge variant={
-                  request.status === 'pending' ? 'default' : 
-                  request.status === 'approved' ? 'default' : 'destructive'
-                }>
-                  {request.status === 'pending' ? 'Ожидает' : 
-                   request.status === 'approved' ? 'Одобрено' : 'Отклонено'}
-                </Badge>
-                {request.status === 'pending' && (
-                  <div className="flex space-x-2">
-                    <Button size="sm" variant="outline" className="text-green-600 border-green-600 hover:bg-green-50">
-                      <Icon name="Check" size={16} />
-                    </Button>
-                    <Button size="sm" variant="outline" className="text-red-600 border-red-600 hover:bg-red-50">
-                      <Icon name="X" size={16} />
-                    </Button>
+        {requestsLoading ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">Загрузка заявок...</p>
+          </div>
+        ) : requests.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">Заявок пока нет</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {requests.map(request => (
+              <div key={request.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                <div className="flex items-center space-x-4">
+                  <div className="p-2 rounded-full bg-blue-100">
+                    <Icon 
+                      name="FileText" 
+                      className="text-blue-600" 
+                      size={20} 
+                    />
                   </div>
-                )}
+                  <div>
+                    <h3 className="font-semibold">
+                      {request.employee.last_name} {request.employee.first_name} {request.employee.middle_name}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {getRequestTypeLabel(request.request_type)} • {request.employee.service}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(request.created_at).toLocaleDateString('ru-RU', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                    {request.notes && (
+                      <p className="text-xs text-gray-600 mt-1">{request.notes}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Badge variant={
+                    request.status === 'pending' ? 'default' : 
+                    request.status === 'approved' ? 'default' : 
+                    request.status === 'completed' ? 'secondary' : 'destructive'
+                  }>
+                    {request.status === 'pending' ? 'Ожидает' : 
+                     request.status === 'approved' ? 'Одобрено' : 
+                     request.status === 'completed' ? 'Выполнено' : 'Отклонено'}
+                  </Badge>
+                  {request.status === 'pending' && (
+                    <div className="flex space-x-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="text-green-600 border-green-600 hover:bg-green-50"
+                        onClick={() => updateRequestStatus(request.id, 'approved')}
+                      >
+                        <Icon name="Check" size={16} />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="text-red-600 border-red-600 hover:bg-red-50"
+                        onClick={() => updateRequestStatus(request.id, 'rejected')}
+                      >
+                        <Icon name="X" size={16} />
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </Card>
     </div>
   );
