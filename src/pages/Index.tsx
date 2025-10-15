@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Separator } from '@/components/ui/separator';
 import Icon from '@/components/ui/icon';
 
-const API_URL = 'https://functions.poehali.dev/37ade4d6-e5ff-4e65-a066-98725ef8974c';
+const API_URL = 'https://functions.poehali.dev/7bc58754-feed-404f-8d54-83526deaa4b7';
 
 interface Employee {
   id: number;
