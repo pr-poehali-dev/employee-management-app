@@ -1,13 +1,17 @@
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
 import { Request, requestTypes } from '@/types';
 
 interface RequestsTabProps {
   requests: Request[];
   requestsLoading: boolean;
-  updateRequestStatus: (groupId: string, status: string) => void;
+  updateRequestStatus: (groupId: string, status: string, outgoingNumber?: string) => void;
 }
 
 const getRequestTypeLabel = (type: string) => {
@@ -19,7 +23,55 @@ const getRequestTypeLabel = (type: string) => {
 };
 
 export const RequestsTab = ({ requests, requestsLoading, updateRequestStatus }: RequestsTabProps) => {
+  const [isOutgoingNumberDialogOpen, setIsOutgoingNumberDialogOpen] = useState(false);
+  const [outgoingNumber, setOutgoingNumber] = useState('');
+  const [selectedRequestGroupId, setSelectedRequestGroupId] = useState<string | null>(null);
+
+  const handleCompleteRequest = () => {
+    if (selectedRequestGroupId && outgoingNumber.trim()) {
+      updateRequestStatus(selectedRequestGroupId, 'approved', outgoingNumber);
+      setIsOutgoingNumberDialogOpen(false);
+      setOutgoingNumber('');
+      setSelectedRequestGroupId(null);
+    }
+  };
+
+  const openOutgoingNumberDialog = (groupId: string) => {
+    setSelectedRequestGroupId(groupId);
+    setIsOutgoingNumberDialogOpen(true);
+  };
+
   return (
+    <>
+      <Dialog open={isOutgoingNumberDialogOpen} onOpenChange={setIsOutgoingNumberDialogOpen}>
+        <DialogContent aria-describedby="outgoing-number-description">
+          <DialogHeader>
+            <DialogTitle>Исполнение заявки</DialogTitle>
+          </DialogHeader>
+          <p id="outgoing-number-description" className="sr-only">
+            Введите исходящий номер для исполнения заявки
+          </p>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="outgoing-number">Исходящий номер</Label>
+              <Input
+                id="outgoing-number"
+                placeholder="Введите исходящий номер"
+                value={outgoingNumber}
+                onChange={(e) => setOutgoingNumber(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsOutgoingNumberDialogOpen(false)}>
+              Отмена
+            </Button>
+            <Button onClick={handleCompleteRequest} disabled={!outgoingNumber.trim()}>
+              Исполнить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Заявки</h1>
@@ -89,7 +141,7 @@ export const RequestsTab = ({ requests, requestsLoading, updateRequestStatus }: 
                         size="sm" 
                         variant="outline" 
                         className="text-green-600 border-green-600 hover:bg-green-50"
-                        onClick={() => updateRequestStatus(request.request_group_id, 'approved')}
+                        onClick={() => openOutgoingNumberDialog(request.request_group_id)}
                       >
                         <Icon name="Check" size={16} />
                       </Button>
@@ -109,6 +161,6 @@ export const RequestsTab = ({ requests, requestsLoading, updateRequestStatus }: 
           </div>
         )}
       </Card>
-    </div>
+    </>
   );
 };

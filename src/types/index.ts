@@ -25,6 +25,8 @@ export interface Request {
   created_at: string;
   updated_at: string;
   approved_at: string | null;
+  completed_at?: string | null;
+  outgoing_number?: string;
   employees: {
     id: number;
     last_name: string;

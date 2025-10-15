@@ -212,7 +212,7 @@ const Index = () => {
     }
   };
 
-  const updateRequestStatus = async (requestGroupId: string, newStatus: string) => {
+  const updateRequestStatus = async (requestGroupId: string, newStatus: string, outgoingNumber?: string) => {
     try {
       const response = await fetch(REQUESTS_API_URL, {
         method: 'POST',
@@ -220,7 +220,8 @@ const Index = () => {
         body: JSON.stringify({
           action: 'update_status',
           request_group_id: requestGroupId,
-          status: newStatus
+          status: newStatus,
+          outgoing_number: outgoingNumber
         })
       });
       

@@ -85,8 +85,22 @@ function EmployeeDetailsModal({ employee, isOpen, onClose }: EmployeeDetailsModa
       case 'pending': return 'Ожидание';
       case 'approved': return 'Согласовано';
       case 'completed': return 'Выполнено';
+      case 'rejected': return 'Отклонено';
       default: return status;
     }
+  };
+
+  const getCategoryLabel = (category: string) => {
+    const categoryData = requestTypes[category as keyof typeof requestTypes];
+    return categoryData ? categoryData.label : category;
+  };
+
+  const getTypeLabel = (type: string) => {
+    for (const category of Object.values(requestTypes)) {
+      const subtype = category.subtypes.find(st => st.value === type);
+      if (subtype) return subtype.label;
+    }
+    return type;
   };
 
   if (!employee) return null;
@@ -164,18 +178,24 @@ function EmployeeDetailsModal({ employee, isOpen, onClose }: EmployeeDetailsModa
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-1">
-                          <Badge variant="outline">{request.request_category}</Badge>
+                          <Badge variant="outline">{getCategoryLabel(request.request_category)}</Badge>
                           <Badge variant={getStatusBadgeVariant(request.status)}>
                             {getStatusLabel(request.status)}
                           </Badge>
                         </div>
-                        <p className="text-sm font-medium text-gray-900">{request.request_type}</p>
+                        <p className="text-sm font-medium text-gray-900">{getTypeLabel(request.request_type)}</p>
                       </div>
                     </div>
                     <div className="text-xs text-gray-500 space-y-1">
                       <p>Создано: {new Date(request.created_at).toLocaleString('ru-RU')}</p>
                       {request.approved_at && (
                         <p>Согласовано: {new Date(request.approved_at).toLocaleString('ru-RU')}</p>
+                      )}
+                      {request.status === 'approved' && request.completed_at && (
+                        <p>Исполнено: {new Date(request.completed_at).toLocaleString('ru-RU')}</p>
+                      )}
+                      {request.outgoing_number && (
+                        <p className="font-medium text-gray-700">Исходящий номер: {request.outgoing_number}</p>
                       )}
                     </div>
                     {request.notes && (
