@@ -341,9 +341,9 @@ const Index = () => {
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Распределение по отделам</h3>
           <div className="space-y-3">
-            {[...new Set(mockEmployees.map(e => e.service))].map(service => {
-              const count = mockEmployees.filter(e => e.service === service).length;
-              const percentage = (count / mockEmployees.length) * 100;
+            {[...new Set(employees.map(e => e.service))].map(service => {
+              const count = employees.filter(e => e.service === service).length;
+              const percentage = (count / employees.length) * 100;
               return (
                 <div key={service}>
                   <div className="flex justify-between text-sm mb-1">
@@ -396,7 +396,7 @@ const Index = () => {
                         <p className="text-gray-500">Выберите сотрудников для удаления</p>
                       ) : (
                         selectedEmployees.map(id => {
-                          const employee = mockEmployees.find(e => e.id === id);
+                          const employee = employees.find(e => e.id === id);
                           return employee ? (
                             <div key={id} className="py-1">
                               {employee.last_name} {employee.first_name} {employee.middle_name}
