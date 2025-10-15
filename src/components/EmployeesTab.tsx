@@ -195,7 +195,7 @@ function EmployeeDetailsModal({ employee, isOpen, onClose }: EmployeeDetailsModa
                         <p>Исполнено: {new Date(request.completed_at).toLocaleString('ru-RU')}</p>
                       )}
                       {request.outgoing_number && (
-                        <p className="font-medium text-gray-700">Исходящий номер: {request.outgoing_number}</p>
+                        <p className="font-medium text-gray-700">{request.outgoing_number}</p>
                       )}
                     </div>
                     {request.notes && (

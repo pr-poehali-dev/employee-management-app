@@ -25,13 +25,16 @@ const getRequestTypeLabel = (type: string) => {
 export const RequestsTab = ({ requests, requestsLoading, updateRequestStatus }: RequestsTabProps) => {
   const [isOutgoingNumberDialogOpen, setIsOutgoingNumberDialogOpen] = useState(false);
   const [outgoingNumber, setOutgoingNumber] = useState('');
+  const [outgoingDate, setOutgoingDate] = useState('');
   const [selectedRequestGroupId, setSelectedRequestGroupId] = useState<string | null>(null);
 
   const handleCompleteRequest = () => {
-    if (selectedRequestGroupId && outgoingNumber.trim()) {
-      updateRequestStatus(selectedRequestGroupId, 'approved', outgoingNumber);
+    if (selectedRequestGroupId && outgoingNumber.trim() && outgoingDate.trim()) {
+      const fullOutgoingInfo = `№${outgoingNumber} от ${outgoingDate}`;
+      updateRequestStatus(selectedRequestGroupId, 'approved', fullOutgoingInfo);
       setIsOutgoingNumberDialogOpen(false);
       setOutgoingNumber('');
+      setOutgoingDate('');
       setSelectedRequestGroupId(null);
     }
   };
@@ -53,20 +56,31 @@ export const RequestsTab = ({ requests, requestsLoading, updateRequestStatus }: 
           </p>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="outgoing-number">Исходящий номер</Label>
-              <Input
-                id="outgoing-number"
-                placeholder="Введите исходящий номер"
-                value={outgoingNumber}
-                onChange={(e) => setOutgoingNumber(e.target.value)}
-              />
+              <Label htmlFor="outgoing-number">Исходящий номер и дата</Label>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-medium">№</span>
+                <Input
+                  id="outgoing-number"
+                  placeholder="Номер"
+                  value={outgoingNumber}
+                  onChange={(e) => setOutgoingNumber(e.target.value)}
+                  className="flex-1"
+                />
+                <span className="text-sm font-medium">от</span>
+                <Input
+                  type="date"
+                  value={outgoingDate}
+                  onChange={(e) => setOutgoingDate(e.target.value)}
+                  className="flex-1"
+                />
+              </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsOutgoingNumberDialogOpen(false)}>
               Отмена
             </Button>
-            <Button onClick={handleCompleteRequest} disabled={!outgoingNumber.trim()}>
+            <Button onClick={handleCompleteRequest} disabled={!outgoingNumber.trim() || !outgoingDate.trim()}>
               Исполнить
             </Button>
           </DialogFooter>
