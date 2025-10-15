@@ -441,6 +441,7 @@ export default function EmployeesTab({
           </div>
         )}
       </Card>
+    </div>
     </>
   );
 }
