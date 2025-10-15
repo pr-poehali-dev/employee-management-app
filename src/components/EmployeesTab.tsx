@@ -95,10 +95,13 @@ function EmployeeDetailsModal({ employee, isOpen, onClose }: EmployeeDetailsModa
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto" aria-describedby="employee-details-description">
         <DialogHeader>
           <DialogTitle>Информация о сотруднике</DialogTitle>
         </DialogHeader>
+        <p id="employee-details-description" className="sr-only">
+          Подробная информация о сотруднике и история его заявок
+        </p>
         
         <div className="space-y-6">
           <div className="flex items-start space-x-4">
