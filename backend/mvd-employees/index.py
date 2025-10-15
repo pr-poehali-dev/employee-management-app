@@ -86,8 +86,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 cursor.execute('''
                     INSERT INTO employees_mvd 
                     (last_name, first_name, middle_name, position, rank, service, 
-                     department, address, office, phone, sudis_login, official_email, status)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                     department, address, office, phone, sudis_login, status)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     RETURNING id
                 ''', (
                     employee.get('last_name'),
@@ -101,7 +101,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     employee.get('office'),
                     employee.get('phone'),
                     employee.get('sudis_login'),
-                    employee.get('official_email'),
                     employee.get('status', 'active')
                 ))
                 new_id = cursor.fetchone()['id']
@@ -129,7 +128,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     UPDATE employees_mvd 
                     SET last_name=%s, first_name=%s, middle_name=%s, position=%s, 
                         rank=%s, service=%s, department=%s, address=%s, office=%s, 
-                        phone=%s, sudis_login=%s, official_email=%s, status=%s,
+                        phone=%s, sudis_login=%s, status=%s,
                         updated_at=CURRENT_TIMESTAMP
                     WHERE id=%s
                 ''', (
@@ -144,7 +143,6 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     employee.get('office'),
                     employee.get('phone'),
                     employee.get('sudis_login'),
-                    employee.get('official_email'),
                     employee.get('status'),
                     employee_id
                 ))
