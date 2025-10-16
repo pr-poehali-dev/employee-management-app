@@ -1,5 +1,40 @@
 import ExcelJS from 'exceljs';
-import { Employee, ExcelTemplate } from '@/types';
+import { Employee, ExcelTemplate, FieldType } from '@/types';
+
+const getFieldValue = (employee: Employee, field: FieldType): string => {
+  switch (field) {
+    case 'full_name':
+      return `${employee.last_name} ${employee.first_name} ${employee.middle_name || ''}`.trim();
+    case 'last_name':
+      return employee.last_name;
+    case 'first_name':
+      return employee.first_name;
+    case 'middle_name':
+      return employee.middle_name || '';
+    case 'position':
+      return employee.position;
+    case 'rank':
+      return employee.rank;
+    case 'service':
+      return employee.service;
+    case 'department':
+      return employee.department;
+    case 'address':
+      return employee.address;
+    case 'office':
+      return employee.office;
+    case 'phone':
+      return employee.phone;
+    case 'office_and_phone':
+      return `${employee.office}, ${employee.phone}`;
+    case 'sudis_login':
+      return employee.sudis_login;
+    case 'official_email':
+      return employee.official_email;
+    default:
+      return '';
+  }
+};
 
 export const generateExcelFromTemplate = async (
   template: ExcelTemplate,
@@ -19,34 +54,19 @@ export const generateExcelFromTemplate = async (
     throw new Error('Лист Excel не найден');
   }
 
-  employees.forEach((employee, index) => {
-    const currentRow = template.startRow + index;
+  employees.forEach((employee, employeeIndex) => {
+    const currentRow = template.startRow + employeeIndex;
 
-    if (template.mapping.fullName) {
-      const fullName = `${employee.last_name} ${employee.first_name} ${employee.middle_name || ''}`.trim();
-      worksheet.getCell(template.mapping.fullName.replace(/\d+/, currentRow.toString())).value = fullName;
-    }
+    template.cellMappings.forEach((mapping) => {
+      if (!mapping.cell || mapping.fields.length === 0) return;
 
-    if (template.mapping.position) {
-      worksheet.getCell(template.mapping.position.replace(/\d+/, currentRow.toString())).value = employee.position;
-    }
+      const values = mapping.fields.map(field => getFieldValue(employee, field));
+      const separator = mapping.separator || ' ';
+      const cellValue = values.filter(v => v).join(separator);
 
-    if (template.mapping.department) {
-      worksheet.getCell(template.mapping.department.replace(/\d+/, currentRow.toString())).value = employee.department;
-    }
-
-    if (template.mapping.address) {
-      worksheet.getCell(template.mapping.address.replace(/\d+/, currentRow.toString())).value = employee.address;
-    }
-
-    if (template.mapping.office) {
-      const officePhone = `${employee.office}, ${employee.phone}`;
-      worksheet.getCell(template.mapping.office.replace(/\d+/, currentRow.toString())).value = officePhone;
-    }
-
-    if (template.mapping.sudisLogin) {
-      worksheet.getCell(template.mapping.sudisLogin.replace(/\d+/, currentRow.toString())).value = employee.sudis_login;
-    }
+      const cellAddress = mapping.cell.replace(/\d+/, currentRow.toString());
+      worksheet.getCell(cellAddress).value = cellValue;
+    });
   });
 
   const buffer = await workbook.xlsx.writeBuffer();

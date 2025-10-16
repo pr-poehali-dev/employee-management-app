@@ -12,7 +12,7 @@ export const saveTemplateToStorage = async (template: ExcelTemplate): Promise<vo
     id: template.id,
     name: template.name,
     requestType: template.requestType,
-    mapping: template.mapping,
+    cellMappings: template.cellMappings,
     startRow: template.startRow
   };
 
@@ -64,7 +64,7 @@ export const loadTemplatesFromStorage = async (): Promise<ExcelTemplate[]> => {
       id: stored.id,
       name: stored.name,
       requestType: stored.requestType,
-      mapping: stored.mapping,
+      cellMappings: stored.cellMappings,
       startRow: stored.startRow,
       file
     };

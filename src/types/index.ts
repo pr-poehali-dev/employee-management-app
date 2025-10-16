@@ -41,20 +41,37 @@ export interface Request {
 
 export type Tab = 'dashboard' | 'employees' | 'requests' | 'history' | 'settings';
 
+export type FieldType = 
+  | 'full_name'
+  | 'last_name'
+  | 'first_name'
+  | 'middle_name'
+  | 'position'
+  | 'rank'
+  | 'service'
+  | 'department'
+  | 'address'
+  | 'office'
+  | 'phone'
+  | 'office_and_phone'
+  | 'sudis_login'
+  | 'official_email'
+  | 'custom';
+
+export interface CellMapping {
+  id: string;
+  cell: string;
+  fields: FieldType[];
+  separator?: string;
+  customText?: string;
+}
+
 export interface ExcelTemplate {
   id: string;
   name: string;
   requestType: string;
   file: File | null;
-  mapping: {
-    fullName?: string;
-    position?: string;
-    department?: string;
-    address?: string;
-    office?: string;
-    phone?: string;
-    sudisLogin?: string;
-  };
+  cellMappings: CellMapping[];
   startRow: number;
 }
 

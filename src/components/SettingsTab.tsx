@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import Icon from '@/components/ui/icon';
-import { ExcelTemplate, requestTypes } from '@/types';
+import { ExcelTemplate, requestTypes, FieldType, CellMapping } from '@/types';
 
 interface SettingsTabProps {
   templates: ExcelTemplate[];
@@ -20,9 +21,26 @@ export const SettingsTab = ({ templates, onSaveTemplate, onDeleteTemplate }: Set
     name: '',
     requestType: 'eir-rmu',
     file: null,
-    mapping: {},
+    cellMappings: [],
     startRow: 15
   });
+
+  const fieldOptions: { value: FieldType; label: string; description: string }[] = [
+    { value: 'full_name', label: 'ФИО полностью', description: 'Иванов Иван Иванович' },
+    { value: 'last_name', label: 'Фамилия', description: 'Иванов' },
+    { value: 'first_name', label: 'Имя', description: 'Иван' },
+    { value: 'middle_name', label: 'Отчество', description: 'Иванович' },
+    { value: 'position', label: 'Должность', description: 'Инженер-программист' },
+    { value: 'rank', label: 'Звание', description: 'лейтенант полиции' },
+    { value: 'service', label: 'Служба', description: 'ИТС' },
+    { value: 'department', label: 'Отдел', description: 'ОИТ' },
+    { value: 'address', label: 'Адрес', description: 'г. Москва, ул. Ленина, д. 1' },
+    { value: 'office', label: 'Кабинет', description: '101' },
+    { value: 'phone', label: 'Телефон', description: '+7 (495) 123-45-67' },
+    { value: 'office_and_phone', label: 'Кабинет и телефон', description: '101, +7 (495) 123-45-67' },
+    { value: 'sudis_login', label: 'Логин СУДИС', description: 'ivanov_ii' },
+    { value: 'official_email', label: 'Служебная почта', description: 'ivanov_ii@mvd.ru' }
+  ];
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -37,6 +55,11 @@ export const SettingsTab = ({ templates, onSaveTemplate, onDeleteTemplate }: Set
       return;
     }
 
+    if (editingTemplate.cellMappings.length === 0) {
+      alert('Добавьте хотя бы одну ячейку для маппинга');
+      return;
+    }
+
     const template: ExcelTemplate = {
       ...editingTemplate,
       id: editingTemplate.id || `template_${Date.now()}`
@@ -44,14 +67,63 @@ export const SettingsTab = ({ templates, onSaveTemplate, onDeleteTemplate }: Set
 
     onSaveTemplate(template);
     setIsEditing(false);
+    resetEditingTemplate();
+  };
+
+  const resetEditingTemplate = () => {
     setEditingTemplate({
       id: '',
       name: '',
       requestType: 'eir-rmu',
       file: null,
-      mapping: {},
+      cellMappings: [],
       startRow: 15
     });
+  };
+
+  const addCellMapping = () => {
+    const newMapping: CellMapping = {
+      id: `mapping_${Date.now()}`,
+      cell: '',
+      fields: [],
+      separator: ' '
+    };
+    setEditingTemplate(prev => ({
+      ...prev,
+      cellMappings: [...prev.cellMappings, newMapping]
+    }));
+  };
+
+  const removeCellMapping = (mappingId: string) => {
+    setEditingTemplate(prev => ({
+      ...prev,
+      cellMappings: prev.cellMappings.filter(m => m.id !== mappingId)
+    }));
+  };
+
+  const updateCellMapping = (mappingId: string, updates: Partial<CellMapping>) => {
+    setEditingTemplate(prev => ({
+      ...prev,
+      cellMappings: prev.cellMappings.map(m => 
+        m.id === mappingId ? { ...m, ...updates } : m
+      )
+    }));
+  };
+
+  const toggleField = (mappingId: string, field: FieldType) => {
+    setEditingTemplate(prev => ({
+      ...prev,
+      cellMappings: prev.cellMappings.map(m => {
+        if (m.id !== mappingId) return m;
+        const hasField = m.fields.includes(field);
+        return {
+          ...m,
+          fields: hasField 
+            ? m.fields.filter(f => f !== field)
+            : [...m.fields, field]
+        };
+      })
+    }));
   };
 
   const handleEditTemplate = (template: ExcelTemplate) => {
@@ -128,92 +200,97 @@ export const SettingsTab = ({ templates, onSaveTemplate, onDeleteTemplate }: Set
             </div>
 
             <div className="border-t pt-4">
-              <h3 className="font-semibold mb-3">Маппинг данных в ячейки</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Укажите, в какие ячейки Excel нужно подставлять данные сотрудника
-              </p>
-
-              <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center justify-between mb-3">
                 <div>
-                  <Label htmlFor="cell-fullname">ФИО (например: B15)</Label>
-                  <Input
-                    id="cell-fullname"
-                    placeholder="B15"
-                    value={editingTemplate.mapping.fullName || ''}
-                    onChange={(e) => setEditingTemplate(prev => ({
-                      ...prev,
-                      mapping: { ...prev.mapping, fullName: e.target.value }
-                    }))}
-                  />
+                  <h3 className="font-semibold">Маппинг данных в ячейки</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Настройте, какие данные в какие ячейки подставлять
+                  </p>
                 </div>
-
-                <div>
-                  <Label htmlFor="cell-position">Должность (например: C15)</Label>
-                  <Input
-                    id="cell-position"
-                    placeholder="C15"
-                    value={editingTemplate.mapping.position || ''}
-                    onChange={(e) => setEditingTemplate(prev => ({
-                      ...prev,
-                      mapping: { ...prev.mapping, position: e.target.value }
-                    }))}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="cell-department">Подразделение (например: D15)</Label>
-                  <Input
-                    id="cell-department"
-                    placeholder="D15"
-                    value={editingTemplate.mapping.department || ''}
-                    onChange={(e) => setEditingTemplate(prev => ({
-                      ...prev,
-                      mapping: { ...prev.mapping, department: e.target.value }
-                    }))}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="cell-address">Адрес (например: E15)</Label>
-                  <Input
-                    id="cell-address"
-                    placeholder="E15"
-                    value={editingTemplate.mapping.address || ''}
-                    onChange={(e) => setEditingTemplate(prev => ({
-                      ...prev,
-                      mapping: { ...prev.mapping, address: e.target.value }
-                    }))}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="cell-office">Кабинет и телефон (например: F15)</Label>
-                  <Input
-                    id="cell-office"
-                    placeholder="F15"
-                    value={editingTemplate.mapping.office || ''}
-                    onChange={(e) => setEditingTemplate(prev => ({
-                      ...prev,
-                      mapping: { ...prev.mapping, office: e.target.value }
-                    }))}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="cell-sudis">Логин СУДИС (например: G15)</Label>
-                  <Input
-                    id="cell-sudis"
-                    placeholder="G15"
-                    value={editingTemplate.mapping.sudisLogin || ''}
-                    onChange={(e) => setEditingTemplate(prev => ({
-                      ...prev,
-                      mapping: { ...prev.mapping, sudisLogin: e.target.value }
-                    }))}
-                  />
-                </div>
+                <Button size="sm" variant="outline" onClick={addCellMapping}>
+                  <Icon name="Plus" size={14} className="mr-1" />
+                  Добавить ячейку
+                </Button>
               </div>
 
-              <div className="mt-4">
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {editingTemplate.cellMappings.length === 0 ? (
+                  <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                    <Icon name="Table" size={32} className="mx-auto text-gray-400 mb-2" />
+                    <p className="text-sm text-gray-500">Нажмите "Добавить ячейку" для настройки</p>
+                  </div>
+                ) : (
+                  editingTemplate.cellMappings.map((mapping) => (
+                    <Card key={mapping.id} className="p-4 bg-gray-50">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1 grid grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-xs">Ячейка Excel</Label>
+                            <Input
+                              placeholder="B15"
+                              value={mapping.cell}
+                              onChange={(e) => updateCellMapping(mapping.id, { cell: e.target.value })}
+                              className="h-8"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Разделитель</Label>
+                            <Input
+                              placeholder="пробел"
+                              value={mapping.separator}
+                              onChange={(e) => updateCellMapping(mapping.id, { separator: e.target.value })}
+                              className="h-8"
+                            />
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => removeCellMapping(mapping.id)}
+                          className="ml-2"
+                        >
+                          <Icon name="Trash2" size={14} className="text-red-600" />
+                        </Button>
+                      </div>
+
+                      <div>
+                        <Label className="text-xs mb-2 block">Выберите поля для подстановки:</Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {fieldOptions.map((option) => (
+                            <div key={option.value} className="flex items-start space-x-2">
+                              <Checkbox
+                                id={`${mapping.id}-${option.value}`}
+                                checked={mapping.fields.includes(option.value)}
+                                onCheckedChange={() => toggleField(mapping.id, option.value)}
+                              />
+                              <div className="flex-1">
+                                <label
+                                  htmlFor={`${mapping.id}-${option.value}`}
+                                  className="text-xs font-medium cursor-pointer"
+                                >
+                                  {option.label}
+                                </label>
+                                <p className="text-xs text-gray-500">{option.description}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {mapping.fields.length > 0 && (
+                        <div className="mt-3 p-2 bg-blue-50 rounded text-xs">
+                          <span className="font-medium">Результат:</span>{' '}
+                          <span className="text-gray-700">
+                            {mapping.fields.map(f => fieldOptions.find(o => o.value === f)?.description).join(mapping.separator || ' ')}
+                          </span>
+                        </div>
+                      )}
+                    </Card>
+                  ))
+                )}
+              </div>
+
+              <div className="mt-4 pt-4 border-t">
                 <Label htmlFor="start-row">Стартовая строка для данных</Label>
                 <Input
                   id="start-row"
@@ -224,9 +301,10 @@ export const SettingsTab = ({ templates, onSaveTemplate, onDeleteTemplate }: Set
                     ...prev,
                     startRow: parseInt(e.target.value) || 15
                   }))}
+                  className="w-32"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  При добавлении нескольких сотрудников, каждый будет размещен в новой строке начиная с этой
+                  При выборе нескольких сотрудников каждый следующий будет в новой строке
                 </p>
               </div>
             </div>
@@ -238,14 +316,7 @@ export const SettingsTab = ({ templates, onSaveTemplate, onDeleteTemplate }: Set
               </Button>
               <Button variant="outline" onClick={() => {
                 setIsEditing(false);
-                setEditingTemplate({
-                  id: '',
-                  name: '',
-                  requestType: 'eir-rmu',
-                  file: null,
-                  mapping: {},
-                  startRow: 15
-                });
+                resetEditingTemplate();
               }}>
                 Отмена
               </Button>
@@ -284,7 +355,7 @@ export const SettingsTab = ({ templates, onSaveTemplate, onDeleteTemplate }: Set
                           {getRequestTypeLabel(template.requestType)}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
-                          Стартовая строка: {template.startRow} • Полей маппинга: {Object.keys(template.mapping).filter(k => template.mapping[k as keyof typeof template.mapping]).length}
+                          Стартовая строка: {template.startRow} • Ячеек: {template.cellMappings.length}
                         </p>
                       </div>
                     </div>
