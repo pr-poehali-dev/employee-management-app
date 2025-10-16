@@ -11,7 +11,7 @@ import { Request, requestTypes } from '@/types';
 interface RequestsTabProps {
   requests: Request[];
   requestsLoading: boolean;
-  updateRequestStatus: (groupId: string, status: string, outgoingNumber?: string) => void;
+  updateRequestStatus: (groupId: string, status: string, outgoingNumber?: string, outgoingDate?: string) => void;
 }
 
 const getRequestTypeLabel = (type: string) => {
@@ -30,8 +30,7 @@ export const RequestsTab = ({ requests, requestsLoading, updateRequestStatus }: 
 
   const handleCompleteRequest = () => {
     if (selectedRequestGroupId && outgoingNumber.trim() && outgoingDate.trim()) {
-      const fullOutgoingInfo = `№${outgoingNumber} от ${outgoingDate}`;
-      updateRequestStatus(selectedRequestGroupId, 'approved', fullOutgoingInfo);
+      updateRequestStatus(selectedRequestGroupId, 'approved', outgoingNumber, outgoingDate);
       setIsOutgoingNumberDialogOpen(false);
       setOutgoingNumber('');
       setOutgoingDate('');

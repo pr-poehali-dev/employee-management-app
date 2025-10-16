@@ -56,6 +56,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         r.updated_at,
                         r.approved_at,
                         r.request_group_id,
+                        r.outgoing_number,
+                        r.outgoing_date,
                         e.id as employee_id,
                         e.last_name,
                         e.first_name,
@@ -90,6 +92,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                             'created_at': req['created_at'].isoformat() if req['created_at'] else None,
                             'updated_at': req['updated_at'].isoformat() if req['updated_at'] else None,
                             'approved_at': req['approved_at'].isoformat() if req['approved_at'] else None,
+                            'outgoing_number': req['outgoing_number'],
+                            'outgoing_date': req['outgoing_date'].isoformat() if req['outgoing_date'] else None,
                             'employees': []
                         }
                     
@@ -161,12 +165,21 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             elif action == 'update_status':
                 request_group_id = body_data.get('request_group_id')
                 new_status = body_data.get('status')
+                outgoing_number = body_data.get('outgoing_number')
+                outgoing_date = body_data.get('outgoing_date')
                 
-                cursor.execute('''
-                    UPDATE t_p46137463_employee_management_.requests 
-                    SET status=%s, updated_at=CURRENT_TIMESTAMP
-                    WHERE request_group_id=%s
-                ''', (new_status, request_group_id))
+                if outgoing_number and outgoing_date:
+                    cursor.execute('''
+                        UPDATE t_p46137463_employee_management_.requests 
+                        SET status=%s, updated_at=CURRENT_TIMESTAMP, outgoing_number=%s, outgoing_date=%s
+                        WHERE request_group_id=%s
+                    ''', (new_status, outgoing_number, outgoing_date, request_group_id))
+                else:
+                    cursor.execute('''
+                        UPDATE t_p46137463_employee_management_.requests 
+                        SET status=%s, updated_at=CURRENT_TIMESTAMP
+                        WHERE request_group_id=%s
+                    ''', (new_status, request_group_id))
                 
                 conn.commit()
                 cursor.close()

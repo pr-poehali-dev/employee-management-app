@@ -212,7 +212,7 @@ const Index = () => {
     }
   };
 
-  const updateRequestStatus = async (requestGroupId: string, newStatus: string, outgoingNumber?: string) => {
+  const updateRequestStatus = async (requestGroupId: string, newStatus: string, outgoingNumber?: string, outgoingDate?: string) => {
     try {
       const response = await fetch(REQUESTS_API_URL, {
         method: 'POST',
@@ -221,7 +221,8 @@ const Index = () => {
           action: 'update_status',
           request_group_id: requestGroupId,
           status: newStatus,
-          outgoing_number: outgoingNumber
+          outgoing_number: outgoingNumber,
+          outgoing_date: outgoingDate
         })
       });
       
