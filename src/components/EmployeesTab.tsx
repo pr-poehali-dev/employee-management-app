@@ -6,8 +6,9 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import Icon from '@/components/ui/icon';
-import { Employee, requestTypes, Request, REQUESTS_API_URL } from '@/types';
+import { Employee, requestTypes, Request, REQUESTS_API_URL, ExcelTemplate } from '@/types';
 import { useState, useEffect } from 'react';
+import { generateExcelFromTemplate, downloadExcelFile } from '@/utils/excelGenerator';
 
 interface EmployeesTabProps {
   employees: Employee[];
@@ -27,6 +28,7 @@ interface EmployeesTabProps {
   setRequestType: (type: string) => void;
   createRequest: () => void;
   filteredEmployees: Employee[];
+  templates: ExcelTemplate[];
 }
 
 interface EmployeeDetailsModalProps {
@@ -235,9 +237,41 @@ export default function EmployeesTab({
   requestType,
   setRequestType,
   createRequest,
-  filteredEmployees
+  filteredEmployees,
+  templates
 }: EmployeesTabProps) {
   const [selectedEmployeeForDetails, setSelectedEmployeeForDetails] = useState<Employee | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
+
+  const handleGenerateExcel = async () => {
+    if (!selectedTemplate) {
+      alert('Выберите шаблон заявки');
+      return;
+    }
+
+    const template = templates.find(t => t.id === selectedTemplate);
+    if (!template) {
+      alert('Шаблон не найден');
+      return;
+    }
+
+    if (!template.file) {
+      alert('Файл шаблона не загружен');
+      return;
+    }
+
+    const selectedEmployeesList = employees.filter(emp => selectedEmployees.includes(emp.id));
+    
+    try {
+      const blob = await generateExcelFromTemplate(template, selectedEmployeesList);
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `${template.name}_${timestamp}.xlsx`;
+      downloadExcelFile(blob, filename);
+    } catch (error) {
+      console.error('Ошибка генерации файла:', error);
+      alert('Ошибка при генерации файла');
+    }
+  };
   
   return (
     <>
@@ -269,6 +303,55 @@ export default function EmployeesTab({
             <Icon name="Trash2" size={18} className="mr-2" />
             Удалить сотрудников
           </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" disabled={selectedEmployees.length === 0 || templates.length === 0}>
+                <Icon name="FileSpreadsheet" size={18} className="mr-2" />
+                Сформировать Excel
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Формирование заявки</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Шаблон заявки</label>
+                  <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Выберите шаблон" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {templates.map(template => (
+                        <SelectItem key={template.id} value={template.id}>
+                          {template.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    Выбранные сотрудники ({selectedEmployees.length})
+                  </label>
+                  <div className="max-h-32 overflow-y-auto border rounded p-2 text-sm bg-gray-50">
+                    {selectedEmployees.map(id => {
+                      const employee = employees.find(e => e.id === id);
+                      return employee ? (
+                        <div key={id} className="py-1">
+                          {employee.last_name} {employee.first_name}
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
+                </div>
+                <Button onClick={handleGenerateExcel} className="w-full" disabled={!selectedTemplate}>
+                  <Icon name="Download" size={16} className="mr-2" />
+                  Скачать заявку
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
           <Dialog>
             <DialogTrigger asChild>
               <Button disabled={selectedEmployees.length === 0}>

@@ -41,6 +41,23 @@ export interface Request {
 
 export type Tab = 'dashboard' | 'employees' | 'requests' | 'history' | 'settings';
 
+export interface ExcelTemplate {
+  id: string;
+  name: string;
+  requestType: string;
+  file: File | null;
+  mapping: {
+    fullName?: string;
+    position?: string;
+    department?: string;
+    address?: string;
+    office?: string;
+    phone?: string;
+    sudisLogin?: string;
+  };
+  startRow: number;
+}
+
 export const requestTypes = {
   'visp': {
     label: 'ВИСП',

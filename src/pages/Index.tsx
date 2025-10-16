@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
-import { Employee, Request, Tab, API_URL, REQUESTS_API_URL } from '@/types';
+import { Employee, Request, Tab, API_URL, REQUESTS_API_URL, ExcelTemplate } from '@/types';
 import { Dashboard } from '@/components/Dashboard';
 import EmployeesTab from '@/components/EmployeesTab';
 import { RequestsTab } from '@/components/RequestsTab';
+import { SettingsTab } from '@/components/SettingsTab';
 import { EmployeeManageDialog } from '@/components/EmployeeManageDialog';
+import { loadTemplatesFromStorage, saveTemplateToStorage, deleteTemplateFromStorage } from '@/utils/templateStorage';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
@@ -21,6 +23,7 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [requests, setRequests] = useState<Request[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(true);
+  const [templates, setTemplates] = useState<ExcelTemplate[]>([]);
   const [employeeForm, setEmployeeForm] = useState({
     last_name: '',
     first_name: '',
@@ -39,7 +42,36 @@ const Index = () => {
   useEffect(() => {
     loadEmployees();
     loadRequests();
+    loadTemplates();
   }, []);
+
+  const loadTemplates = async () => {
+    try {
+      const loadedTemplates = await loadTemplatesFromStorage();
+      setTemplates(loadedTemplates);
+    } catch (error) {
+      console.error('Ошибка загрузки шаблонов:', error);
+    }
+  };
+
+  const saveTemplate = async (template: ExcelTemplate) => {
+    try {
+      await saveTemplateToStorage(template);
+      await loadTemplates();
+    } catch (error) {
+      console.error('Ошибка сохранения шаблона:', error);
+      alert('Ошибка при сохранении шаблона');
+    }
+  };
+
+  const deleteTemplate = async (templateId: string) => {
+    try {
+      deleteTemplateFromStorage(templateId);
+      await loadTemplates();
+    } catch (error) {
+      console.error('Ошибка удаления шаблона:', error);
+    }
+  };
 
   const loadEmployees = async () => {
     try {
@@ -300,6 +332,7 @@ const Index = () => {
             setRequestType={setRequestType}
             createRequest={createRequest}
             filteredEmployees={filteredEmployees}
+            templates={templates}
           />
         )}
 
@@ -319,10 +352,11 @@ const Index = () => {
         )}
 
         {activeTab === 'settings' && (
-          <div className="text-center py-12">
-            <Icon name="Settings" size={48} className="mx-auto text-gray-400 mb-4" />
-            <h2 className="text-xl font-semibold text-gray-600">Настройки в разработке</h2>
-          </div>
+          <SettingsTab
+            templates={templates}
+            onSaveTemplate={saveTemplate}
+            onDeleteTemplate={deleteTemplate}
+          />
         )}
       </div>
 
