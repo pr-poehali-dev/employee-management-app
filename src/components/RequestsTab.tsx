@@ -134,8 +134,14 @@ export const RequestsTab = ({ requests, requestsLoading, updateRequestStatus }: 
                         minute: '2-digit'
                       })}
                     </p>
-                    {request.outgoing_number && (
-                      <p className="text-xs font-medium text-gray-700 mt-1">{request.outgoing_number}</p>
+                    {request.outgoing_number && request.outgoing_date && (
+                      <p className="text-xs font-medium text-gray-700 mt-1">
+                        №{request.outgoing_number} от {new Date(request.outgoing_date).toLocaleDateString('ru-RU', {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit'
+                        })}
+                      </p>
                     )}
                     {request.notes && (
                       <p className="text-xs text-gray-600 mt-1">{request.notes}</p>

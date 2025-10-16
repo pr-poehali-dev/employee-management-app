@@ -194,8 +194,14 @@ function EmployeeDetailsModal({ employee, isOpen, onClose }: EmployeeDetailsModa
                       {request.status === 'approved' && request.completed_at && (
                         <p>Исполнено: {new Date(request.completed_at).toLocaleString('ru-RU')}</p>
                       )}
-                      {request.outgoing_number && (
-                        <p className="font-medium text-gray-700">{request.outgoing_number}</p>
+                      {request.outgoing_number && request.outgoing_date && (
+                        <p className="font-medium text-gray-700">
+                          №{request.outgoing_number} от {new Date(request.outgoing_date).toLocaleDateString('ru-RU', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit'
+                          })}
+                        </p>
                       )}
                     </div>
                     {request.notes && (
