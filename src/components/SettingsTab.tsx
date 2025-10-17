@@ -279,9 +279,44 @@ export const SettingsTab = ({ templates, onSaveTemplate, onDeleteTemplate }: Set
                                 );
                               })}
                             </div>
+                            {mapping.employeeFields && mapping.employeeFields.length > 1 && (
+                              <div className="mt-3">
+                                <Label className="text-xs mb-2 block">Разделитель между полями:</Label>
+                                <RadioGroup 
+                                  value={mapping.separator || 'space'} 
+                                  onValueChange={(value) => updateCellMapping(mapping.id, { separator: value as any })}
+                                  className="flex flex-col space-y-2"
+                                >
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="space" id={`${mapping.id}-space`} />
+                                    <Label htmlFor={`${mapping.id}-space`} className="cursor-pointer text-sm">
+                                      Пробел <span className="text-gray-400">(Иванов Иван)</span>
+                                    </Label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="comma" id={`${mapping.id}-comma`} />
+                                    <Label htmlFor={`${mapping.id}-comma`} className="cursor-pointer text-sm">
+                                      Запятая <span className="text-gray-400">(Иванов, Иван)</span>
+                                    </Label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="newline" id={`${mapping.id}-newline`} />
+                                    <Label htmlFor={`${mapping.id}-newline`} className="cursor-pointer text-sm">
+                                      Перенос строки
+                                    </Label>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="dash" id={`${mapping.id}-dash`} />
+                                    <Label htmlFor={`${mapping.id}-dash`} className="cursor-pointer text-sm">
+                                      Дефис <span className="text-gray-400">(Иванов - Иван)</span>
+                                    </Label>
+                                  </div>
+                                </RadioGroup>
+                              </div>
+                            )}
                             {mapping.employeeFields && mapping.employeeFields.length > 0 && (
-                              <p className="text-xs text-gray-500 mt-1">
-                                Выбрано полей: {mapping.employeeFields.length}. Данные будут объединены через пробел.
+                              <p className="text-xs text-gray-500 mt-2">
+                                Выбрано полей: {mapping.employeeFields.length}
                               </p>
                             )}
                           </div>

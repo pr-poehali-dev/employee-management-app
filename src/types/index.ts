@@ -56,11 +56,14 @@ export type FieldType =
   | 'official_email'
   | 'custom';
 
+export type SeparatorType = 'space' | 'comma' | 'newline' | 'dash';
+
 export interface CellMapping {
   id: string;
   cell: string;
   fieldType: 'employee' | 'custom';
   employeeFields?: FieldType[];
+  separator?: SeparatorType;
   customText?: string;
 }
 

@@ -87,7 +87,20 @@ export const generateExcelFromTemplate = async (
         const values = mapping.employeeFields
           .map(field => getFieldValue(employee, field))
           .filter(val => val.trim() !== '');
-        cell.value = values.join(' ');
+        
+        const separator = mapping.separator || 'space';
+        const separatorMap = {
+          space: ' ',
+          comma: ', ',
+          newline: '\n',
+          dash: ' - '
+        };
+        
+        cell.value = values.join(separatorMap[separator]);
+        
+        if (separator === 'newline') {
+          cell.alignment = { wrapText: true, vertical: 'top' };
+        }
       }
     });
   });
