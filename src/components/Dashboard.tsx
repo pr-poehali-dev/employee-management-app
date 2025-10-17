@@ -29,7 +29,7 @@ export const Dashboard = ({ employees, requests, requestsLoading }: DashboardPro
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-        <p className="text-gray-600 text-right px-[37px]">Когда-нибудь здесь будет полезная информация, а пока какая-то фигня, так-как изначально это задумывалось для ГРЛС. Увы и ах. Бум Быц</p>
+        <p className="text-gray-600 text-right px-[37px]">Когда-нибудь здесь будет полезная информация, а пока  совершенно бесполезная и не никому не нужная какая-то фигня. Просто изначально это задумывалось для ГРЛС.  Но видимо перезадумалось. Увы и ах. Бум Быц</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
