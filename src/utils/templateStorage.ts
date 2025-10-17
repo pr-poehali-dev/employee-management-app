@@ -1,9 +1,40 @@
-import { ExcelTemplate } from '@/types';
+import { ExcelTemplate, CellMapping } from '@/types';
 
 interface StoredTemplate extends Omit<ExcelTemplate, 'file'> {
   fileData?: string;
   fileName?: string;
 }
+
+const migrateOldCellMapping = (mapping: any): CellMapping => {
+  if (mapping.fieldType) {
+    return mapping as CellMapping;
+  }
+
+  if (mapping.fields && Array.isArray(mapping.fields)) {
+    if (mapping.fields.length === 1) {
+      return {
+        id: mapping.id,
+        cell: mapping.cell,
+        fieldType: 'employee',
+        employeeField: mapping.fields[0]
+      };
+    } else if (mapping.fields.length > 1) {
+      return {
+        id: mapping.id,
+        cell: mapping.cell,
+        fieldType: 'custom',
+        customText: ''
+      };
+    }
+  }
+
+  return {
+    id: mapping.id || `mapping_${Date.now()}`,
+    cell: mapping.cell || '',
+    fieldType: 'employee',
+    employeeField: 'last_name'
+  };
+};
 
 export const saveTemplateToStorage = async (template: ExcelTemplate): Promise<void> => {
   const templates = getTemplatesFromStorage();
@@ -60,11 +91,13 @@ export const loadTemplatesFromStorage = async (): Promise<ExcelTemplate[]> => {
       file = new File([blob], stored.fileName, { type: blob.type });
     }
 
+    const migratedMappings = stored.cellMappings.map(migrateOldCellMapping);
+
     return {
       id: stored.id,
       name: stored.name,
       requestType: stored.requestType,
-      cellMappings: stored.cellMappings,
+      cellMappings: migratedMappings,
       startRow: stored.startRow,
       file
     };

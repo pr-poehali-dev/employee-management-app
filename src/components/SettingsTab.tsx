@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Textarea } from '@/components/ui/textarea';
 import Icon from '@/components/ui/icon';
 import { ExcelTemplate, requestTypes, FieldType, CellMapping } from '@/types';
 
@@ -25,8 +26,7 @@ export const SettingsTab = ({ templates, onSaveTemplate, onDeleteTemplate }: Set
     startRow: 15
   });
 
-  const fieldOptions: { value: FieldType; label: string; description: string }[] = [
-    { value: 'full_name', label: 'ФИО полностью', description: 'Иванов Иван Иванович' },
+  const employeeFieldOptions: { value: FieldType; label: string; description: string }[] = [
     { value: 'last_name', label: 'Фамилия', description: 'Иванов' },
     { value: 'first_name', label: 'Имя', description: 'Иван' },
     { value: 'middle_name', label: 'Отчество', description: 'Иванович' },
@@ -37,7 +37,6 @@ export const SettingsTab = ({ templates, onSaveTemplate, onDeleteTemplate }: Set
     { value: 'address', label: 'Адрес', description: 'г. Москва, ул. Ленина, д. 1' },
     { value: 'office', label: 'Кабинет', description: '101' },
     { value: 'phone', label: 'Телефон', description: '+7 (495) 123-45-67' },
-    { value: 'office_and_phone', label: 'Кабинет и телефон', description: '101, +7 (495) 123-45-67' },
     { value: 'sudis_login', label: 'Логин СУДИС', description: 'ivanov_ii' },
     { value: 'official_email', label: 'Служебная почта', description: 'ivanov_ii@mvd.ru' }
   ];
@@ -85,8 +84,8 @@ export const SettingsTab = ({ templates, onSaveTemplate, onDeleteTemplate }: Set
     const newMapping: CellMapping = {
       id: `mapping_${Date.now()}`,
       cell: '',
-      fields: [],
-      separator: ' '
+      fieldType: 'employee',
+      employeeField: 'last_name'
     };
     setEditingTemplate(prev => ({
       ...prev,
@@ -107,22 +106,6 @@ export const SettingsTab = ({ templates, onSaveTemplate, onDeleteTemplate }: Set
       cellMappings: prev.cellMappings.map(m => 
         m.id === mappingId ? { ...m, ...updates } : m
       )
-    }));
-  };
-
-  const toggleField = (mappingId: string, field: FieldType) => {
-    setEditingTemplate(prev => ({
-      ...prev,
-      cellMappings: prev.cellMappings.map(m => {
-        if (m.id !== mappingId) return m;
-        const hasField = m.fields.includes(field);
-        return {
-          ...m,
-          fields: hasField 
-            ? m.fields.filter(f => f !== field)
-            : [...m.fields, field]
-        };
-      })
     }));
   };
 
@@ -223,25 +206,14 @@ export const SettingsTab = ({ templates, onSaveTemplate, onDeleteTemplate }: Set
                   editingTemplate.cellMappings.map((mapping) => (
                     <Card key={mapping.id} className="p-4 bg-gray-50">
                       <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1 grid grid-cols-2 gap-3">
-                          <div>
-                            <Label className="text-xs">Ячейка Excel</Label>
-                            <Input
-                              placeholder="B15"
-                              value={mapping.cell}
-                              onChange={(e) => updateCellMapping(mapping.id, { cell: e.target.value })}
-                              className="h-8"
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-xs">Разделитель</Label>
-                            <Input
-                              placeholder="пробел"
-                              value={mapping.separator}
-                              onChange={(e) => updateCellMapping(mapping.id, { separator: e.target.value })}
-                              className="h-8"
-                            />
-                          </div>
+                        <div className="flex-1">
+                          <Label className="text-xs">Ячейка Excel</Label>
+                          <Input
+                            placeholder="B15"
+                            value={mapping.cell}
+                            onChange={(e) => updateCellMapping(mapping.id, { cell: e.target.value })}
+                            className="h-8 w-32"
+                          />
                         </div>
                         <Button
                           size="sm"
@@ -253,38 +225,72 @@ export const SettingsTab = ({ templates, onSaveTemplate, onDeleteTemplate }: Set
                         </Button>
                       </div>
 
-                      <div>
-                        <Label className="text-xs mb-2 block">Выберите поля для подстановки:</Label>
-                        <div className="grid grid-cols-2 gap-2">
-                          {fieldOptions.map((option) => (
-                            <div key={option.value} className="flex items-start space-x-2">
-                              <Checkbox
-                                id={`${mapping.id}-${option.value}`}
-                                checked={mapping.fields.includes(option.value)}
-                                onCheckedChange={() => toggleField(mapping.id, option.value)}
-                              />
-                              <div className="flex-1">
-                                <label
-                                  htmlFor={`${mapping.id}-${option.value}`}
-                                  className="text-xs font-medium cursor-pointer"
-                                >
-                                  {option.label}
-                                </label>
-                                <p className="text-xs text-gray-500">{option.description}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                      <div className="space-y-3">
+                        <RadioGroup
+                          value={mapping.fieldType}
+                          onValueChange={(value: 'employee' | 'custom') => 
+                            updateCellMapping(mapping.id, { 
+                              fieldType: value,
+                              employeeField: value === 'employee' ? 'last_name' : undefined,
+                              customText: value === 'custom' ? '' : undefined
+                            })
+                          }
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="employee" id={`${mapping.id}-employee`} />
+                            <Label htmlFor={`${mapping.id}-employee`} className="cursor-pointer">
+                              Данные сотрудника
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="custom" id={`${mapping.id}-custom`} />
+                            <Label htmlFor={`${mapping.id}-custom`} className="cursor-pointer">
+                              Свой текст
+                            </Label>
+                          </div>
+                        </RadioGroup>
 
-                      {mapping.fields.length > 0 && (
-                        <div className="mt-3 p-2 bg-blue-50 rounded text-xs">
-                          <span className="font-medium">Результат:</span>{' '}
-                          <span className="text-gray-700">
-                            {mapping.fields.map(f => fieldOptions.find(o => o.value === f)?.description).join(mapping.separator || ' ')}
-                          </span>
-                        </div>
-                      )}
+                        {mapping.fieldType === 'employee' ? (
+                          <div>
+                            <Label className="text-xs mb-2 block">Поле сотрудника:</Label>
+                            <Select
+                              value={mapping.employeeField}
+                              onValueChange={(value: FieldType) => 
+                                updateCellMapping(mapping.id, { employeeField: value })
+                              }
+                            >
+                              <SelectTrigger className="h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {employeeFieldOptions.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {mapping.employeeField && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                Пример: {employeeFieldOptions.find(o => o.value === mapping.employeeField)?.description}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <div>
+                            <Label className="text-xs mb-2 block">Текст для подстановки:</Label>
+                            <Textarea
+                              placeholder="Введите текст, который будет у каждого сотрудника"
+                              value={mapping.customText || ''}
+                              onChange={(e) => updateCellMapping(mapping.id, { customText: e.target.value })}
+                              className="h-20 text-sm"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              Этот текст будет одинаковый для всех выбранных сотрудников
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </Card>
                   ))
                 )}
@@ -304,7 +310,7 @@ export const SettingsTab = ({ templates, onSaveTemplate, onDeleteTemplate }: Set
                   className="w-32"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  При выборе нескольких сотрудников каждый следующий будет в новой строке
+                  При выборе нескольких сотрудников будет создана новая строка для каждого
                 </p>
               </div>
             </div>
@@ -344,40 +350,35 @@ export const SettingsTab = ({ templates, onSaveTemplate, onDeleteTemplate }: Set
             ) : (
               <div className="space-y-4">
                 {templates.map(template => (
-                  <div key={template.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center space-x-4">
-                      <div className="p-2 rounded-full bg-green-100">
-                        <Icon name="FileSpreadsheet" className="text-green-600" size={20} />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold">{template.name}</h3>
-                        <p className="text-sm text-gray-600">
-                          {getRequestTypeLabel(template.requestType)}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Стартовая строка: {template.startRow} • Ячеек: {template.cellMappings.length}
-                        </p>
-                      </div>
+                  <div key={template.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{template.name}</h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Тип: {getRequestTypeLabel(template.requestType)}
+                      </p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Файл: {template.file?.name || 'не загружен'}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Ячеек: {template.cellMappings.length}, Стартовая строка: {template.startRow}
+                      </p>
                     </div>
                     <div className="flex space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEditTemplate(template)}
-                      >
-                        <Icon name="Edit" size={16} />
+                      <Button size="sm" variant="outline" onClick={() => handleEditTemplate(template)}>
+                        <Icon name="Edit" size={14} className="mr-1" />
+                        Изменить
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-red-600 border-red-600 hover:bg-red-50"
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
                         onClick={() => {
-                          if (confirm(`Удалить шаблон "${template.name}"?`)) {
+                          if (confirm('Удалить шаблон?')) {
                             onDeleteTemplate(template.id);
                           }
                         }}
                       >
-                        <Icon name="Trash2" size={16} />
+                        <Icon name="Trash2" size={14} className="mr-1 text-red-600" />
+                        Удалить
                       </Button>
                     </div>
                   </div>

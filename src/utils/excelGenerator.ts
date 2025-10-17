@@ -3,8 +3,6 @@ import { Employee, ExcelTemplate, FieldType } from '@/types';
 
 const getFieldValue = (employee: Employee, field: FieldType): string => {
   switch (field) {
-    case 'full_name':
-      return `${employee.last_name} ${employee.first_name} ${employee.middle_name || ''}`.trim();
     case 'last_name':
       return employee.last_name;
     case 'first_name':
@@ -25,8 +23,6 @@ const getFieldValue = (employee: Employee, field: FieldType): string => {
       return employee.office;
     case 'phone':
       return employee.phone;
-    case 'office_and_phone':
-      return `${employee.office}, ${employee.phone}`;
     case 'sudis_login':
       return employee.sudis_login;
     case 'official_email':
@@ -34,6 +30,12 @@ const getFieldValue = (employee: Employee, field: FieldType): string => {
     default:
       return '';
   }
+};
+
+const parseCellAddress = (cell: string): { col: string; row: number } => {
+  const match = cell.match(/^([A-Z]+)(\d+)$/);
+  if (!match) throw new Error(`Invalid cell address: ${cell}`);
+  return { col: match[1], row: parseInt(match[2]) };
 };
 
 export const generateExcelFromTemplate = async (
@@ -55,17 +57,35 @@ export const generateExcelFromTemplate = async (
   }
 
   employees.forEach((employee, employeeIndex) => {
+    if (employeeIndex > 0) {
+      worksheet.insertRow(template.startRow + employeeIndex);
+      
+      const sourceRow = worksheet.getRow(template.startRow + employeeIndex - 1);
+      const targetRow = worksheet.getRow(template.startRow + employeeIndex);
+      
+      sourceRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+        const targetCell = targetRow.getCell(colNumber);
+        targetCell.style = { ...cell.style };
+        targetCell.border = cell.border ? { ...cell.border } : undefined;
+      });
+      
+      targetRow.height = sourceRow.height;
+    }
+
     const currentRow = template.startRow + employeeIndex;
 
     template.cellMappings.forEach((mapping) => {
-      if (!mapping.cell || mapping.fields.length === 0) return;
+      if (!mapping.cell) return;
 
-      const values = mapping.fields.map(field => getFieldValue(employee, field));
-      const separator = mapping.separator || ' ';
-      const cellValue = values.filter(v => v).join(separator);
+      const { col } = parseCellAddress(mapping.cell);
+      const cellAddress = `${col}${currentRow}`;
+      const cell = worksheet.getCell(cellAddress);
 
-      const cellAddress = mapping.cell.replace(/\d+/, currentRow.toString());
-      worksheet.getCell(cellAddress).value = cellValue;
+      if (mapping.fieldType === 'custom' && mapping.customText) {
+        cell.value = mapping.customText;
+      } else if (mapping.fieldType === 'employee' && mapping.employeeField) {
+        cell.value = getFieldValue(employee, mapping.employeeField);
+      }
     });
   });
 

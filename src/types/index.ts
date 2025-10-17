@@ -42,7 +42,6 @@ export interface Request {
 export type Tab = 'dashboard' | 'employees' | 'requests' | 'history' | 'settings';
 
 export type FieldType = 
-  | 'full_name'
   | 'last_name'
   | 'first_name'
   | 'middle_name'
@@ -53,7 +52,6 @@ export type FieldType =
   | 'address'
   | 'office'
   | 'phone'
-  | 'office_and_phone'
   | 'sudis_login'
   | 'official_email'
   | 'custom';
@@ -61,8 +59,8 @@ export type FieldType =
 export interface CellMapping {
   id: string;
   cell: string;
-  fields: FieldType[];
-  separator?: string;
+  fieldType: 'employee' | 'custom';
+  employeeField?: FieldType;
   customText?: string;
 }
 
