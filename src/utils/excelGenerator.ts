@@ -83,8 +83,11 @@ export const generateExcelFromTemplate = async (
 
       if (mapping.fieldType === 'custom' && mapping.customText) {
         cell.value = mapping.customText;
-      } else if (mapping.fieldType === 'employee' && mapping.employeeField) {
-        cell.value = getFieldValue(employee, mapping.employeeField);
+      } else if (mapping.fieldType === 'employee' && mapping.employeeFields) {
+        const values = mapping.employeeFields
+          .map(field => getFieldValue(employee, field))
+          .filter(val => val.trim() !== '');
+        cell.value = values.join(' ');
       }
     });
   });

@@ -60,7 +60,7 @@ export interface CellMapping {
   id: string;
   cell: string;
   fieldType: 'employee' | 'custom';
-  employeeField?: FieldType;
+  employeeFields?: FieldType[];
   customText?: string;
 }
 

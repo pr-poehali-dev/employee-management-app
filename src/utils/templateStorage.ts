@@ -6,33 +6,33 @@ interface StoredTemplate extends Omit<ExcelTemplate, 'file'> {
 }
 
 const migrateOldCellMapping = (mapping: any): CellMapping => {
-  if (mapping.fieldType) {
+  if (mapping.fieldType && mapping.employeeFields) {
     return mapping as CellMapping;
   }
 
+  if (mapping.fieldType && mapping.employeeField) {
+    return {
+      id: mapping.id,
+      cell: mapping.cell,
+      fieldType: 'employee',
+      employeeFields: [mapping.employeeField]
+    };
+  }
+
   if (mapping.fields && Array.isArray(mapping.fields)) {
-    if (mapping.fields.length === 1) {
-      return {
-        id: mapping.id,
-        cell: mapping.cell,
-        fieldType: 'employee',
-        employeeField: mapping.fields[0]
-      };
-    } else if (mapping.fields.length > 1) {
-      return {
-        id: mapping.id,
-        cell: mapping.cell,
-        fieldType: 'custom',
-        customText: ''
-      };
-    }
+    return {
+      id: mapping.id,
+      cell: mapping.cell,
+      fieldType: 'employee',
+      employeeFields: mapping.fields
+    };
   }
 
   return {
     id: mapping.id || `mapping_${Date.now()}`,
     cell: mapping.cell || '',
     fieldType: 'employee',
-    employeeField: 'last_name'
+    employeeFields: ['last_name']
   };
 };
 

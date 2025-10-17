@@ -85,7 +85,7 @@ export const SettingsTab = ({ templates, onSaveTemplate, onDeleteTemplate }: Set
       id: `mapping_${Date.now()}`,
       cell: '',
       fieldType: 'employee',
-      employeeField: 'last_name'
+      employeeFields: ['last_name']
     };
     setEditingTemplate(prev => ({
       ...prev,
@@ -231,7 +231,7 @@ export const SettingsTab = ({ templates, onSaveTemplate, onDeleteTemplate }: Set
                           onValueChange={(value: 'employee' | 'custom') => 
                             updateCellMapping(mapping.id, { 
                               fieldType: value,
-                              employeeField: value === 'employee' ? 'last_name' : undefined,
+                              employeeFields: value === 'employee' ? ['last_name'] : undefined,
                               customText: value === 'custom' ? '' : undefined
                             })
                           }
@@ -252,27 +252,36 @@ export const SettingsTab = ({ templates, onSaveTemplate, onDeleteTemplate }: Set
 
                         {mapping.fieldType === 'employee' ? (
                           <div>
-                            <Label className="text-xs mb-2 block">Поле сотрудника:</Label>
-                            <Select
-                              value={mapping.employeeField}
-                              onValueChange={(value: FieldType) => 
-                                updateCellMapping(mapping.id, { employeeField: value })
-                              }
-                            >
-                              <SelectTrigger className="h-8">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {employeeFieldOptions.map((option) => (
-                                  <SelectItem key={option.value} value={option.value}>
-                                    {option.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            {mapping.employeeField && (
+                            <Label className="text-xs mb-2 block">Поля сотрудника (можно выбрать несколько):</Label>
+                            <div className="space-y-2 border rounded-lg p-3 max-h-48 overflow-y-auto">
+                              {employeeFieldOptions.map((option) => {
+                                const isSelected = mapping.employeeFields?.includes(option.value) || false;
+                                return (
+                                  <div key={option.value} className="flex items-center space-x-2">
+                                    <input
+                                      type="checkbox"
+                                      id={`${mapping.id}-${option.value}`}
+                                      checked={isSelected}
+                                      onChange={(e) => {
+                                        const currentFields = mapping.employeeFields || [];
+                                        const newFields = e.target.checked
+                                          ? [...currentFields, option.value]
+                                          : currentFields.filter(f => f !== option.value);
+                                        updateCellMapping(mapping.id, { employeeFields: newFields });
+                                      }}
+                                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <Label htmlFor={`${mapping.id}-${option.value}`} className="cursor-pointer text-sm flex-1">
+                                      <span className="font-medium">{option.label}</span>
+                                      <span className="text-gray-500 ml-2 text-xs">({option.description})</span>
+                                    </Label>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            {mapping.employeeFields && mapping.employeeFields.length > 0 && (
                               <p className="text-xs text-gray-500 mt-1">
-                                Пример: {employeeFieldOptions.find(o => o.value === mapping.employeeField)?.description}
+                                Выбрано полей: {mapping.employeeFields.length}. Данные будут объединены через пробел.
                               </p>
                             )}
                           </div>
