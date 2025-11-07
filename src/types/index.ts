@@ -41,10 +41,10 @@ export interface Request {
 
 export type Tab = 'dashboard' | 'employees' | 'requests' | 'history' | 'settings';
 
-export type FieldType = 
-  | 'last_name'
-  | 'first_name'
-  | 'middle_name'
+export type FieldKey = 
+  | 'surname'
+  | 'name'
+  | 'patronymic'
   | 'position'
   | 'rank'
   | 'service'
@@ -53,18 +53,10 @@ export type FieldType =
   | 'office'
   | 'phone'
   | 'sudis_login'
-  | 'official_email'
-  | 'custom';
+  | 'email';
 
-export type SeparatorType = 'space' | 'comma' | 'newline' | 'dash';
-
-export interface CellMapping {
-  id: string;
-  cell: string;
-  fieldType: 'employee' | 'custom';
-  employeeFields?: FieldType[];
-  separator?: SeparatorType;
-  customText?: string;
+export interface KeyMapping {
+  [key: string]: keyof Employee;
 }
 
 export interface ExcelTemplate {
@@ -72,8 +64,15 @@ export interface ExcelTemplate {
   name: string;
   requestType: string;
   file: File | null;
-  cellMappings: CellMapping[];
-  startRow: number;
+  fileType: 'excel' | 'word';
+}
+
+export interface WordTemplate {
+  id: string;
+  name: string;
+  requestType: string;
+  file: File | null;
+  fileType: 'word';
 }
 
 export const requestTypes = {

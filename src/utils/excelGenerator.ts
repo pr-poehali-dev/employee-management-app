@@ -1,42 +1,6 @@
 import ExcelJS from 'exceljs';
-import { Employee, ExcelTemplate, FieldType } from '@/types';
-
-const getFieldValue = (employee: Employee, field: FieldType): string => {
-  switch (field) {
-    case 'last_name':
-      return employee.last_name;
-    case 'first_name':
-      return employee.first_name;
-    case 'middle_name':
-      return employee.middle_name || '';
-    case 'position':
-      return employee.position;
-    case 'rank':
-      return employee.rank;
-    case 'service':
-      return employee.service;
-    case 'department':
-      return employee.department;
-    case 'address':
-      return employee.address;
-    case 'office':
-      return employee.office;
-    case 'phone':
-      return employee.phone;
-    case 'sudis_login':
-      return employee.sudis_login;
-    case 'official_email':
-      return employee.official_email;
-    default:
-      return '';
-  }
-};
-
-const parseCellAddress = (cell: string): { col: string; row: number } => {
-  const match = cell.match(/^([A-Z]+)(\d+)$/);
-  if (!match) throw new Error(`Invalid cell address: ${cell}`);
-  return { col: match[1], row: parseInt(match[2]) };
-};
+import { Employee, ExcelTemplate } from '@/types';
+import { parseAndReplaceKeys, containsKeys } from './templateParser';
 
 export const generateExcelFromTemplate = async (
   template: ExcelTemplate,
@@ -56,52 +20,84 @@ export const generateExcelFromTemplate = async (
     throw new Error('Лист Excel не найден');
   }
 
-  employees.forEach((employee, employeeIndex) => {
-    if (employeeIndex > 0) {
-      worksheet.insertRow(template.startRow + employeeIndex);
+  const templateRows: Array<{
+    rowIndex: number;
+    cells: Array<{
+      col: string;
+      colNumber: number;
+      value: any;
+      style: any;
+      border: any;
+    }>;
+    height: number | undefined;
+  }> = [];
+
+  let startRow = 0;
+  worksheet.eachRow((row, rowIndex) => {
+    const rowData: (typeof templateRows)[0] = {
+      rowIndex,
+      cells: [],
+      height: row.height
+    };
+
+    let hasKeys = false;
+
+    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      const cellValue = cell.value?.toString() || '';
       
-      const sourceRow = worksheet.getRow(template.startRow + employeeIndex - 1);
-      const targetRow = worksheet.getRow(template.startRow + employeeIndex);
-      
-      sourceRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-        const targetCell = targetRow.getCell(colNumber);
-        targetCell.style = { ...cell.style };
-        targetCell.border = cell.border ? { ...cell.border } : undefined;
-      });
-      
-      targetRow.height = sourceRow.height;
-    }
-
-    const currentRow = template.startRow + employeeIndex;
-
-    template.cellMappings.forEach((mapping) => {
-      if (!mapping.cell) return;
-
-      const { col } = parseCellAddress(mapping.cell);
-      const cellAddress = `${col}${currentRow}`;
-      const cell = worksheet.getCell(cellAddress);
-
-      if (mapping.fieldType === 'custom' && mapping.customText) {
-        cell.value = mapping.customText;
-      } else if (mapping.fieldType === 'employee' && mapping.employeeFields) {
-        const values = mapping.employeeFields
-          .map(field => getFieldValue(employee, field))
-          .filter(val => val.trim() !== '');
-        
-        const separator = mapping.separator || 'space';
-        const separatorMap = {
-          space: ' ',
-          comma: ', ',
-          newline: '\n',
-          dash: ' - '
-        };
-        
-        cell.value = values.join(separatorMap[separator]);
-        
-        if (separator === 'newline') {
-          cell.alignment = { wrapText: true, vertical: 'top' };
+      if (containsKeys(cellValue)) {
+        hasKeys = true;
+        if (startRow === 0) {
+          startRow = rowIndex;
         }
       }
+
+      rowData.cells.push({
+        col: ExcelJS.getExcelColumnName(colNumber),
+        colNumber,
+        value: cellValue,
+        style: { ...cell.style },
+        border: cell.border ? { ...cell.border } : undefined
+      });
+    });
+
+    if (hasKeys) {
+      templateRows.push(rowData);
+    }
+  });
+
+  if (templateRows.length === 0 || startRow === 0) {
+    throw new Error('В шаблоне не найдены ключи для подстановки данных');
+  }
+
+  const rowsToInsert = (employees.length - 1) * templateRows.length;
+  
+  if (rowsToInsert > 0) {
+    const insertPosition = startRow + templateRows.length;
+    for (let i = 0; i < rowsToInsert; i++) {
+      worksheet.insertRow(insertPosition);
+    }
+  }
+
+  employees.forEach((employee, employeeIndex) => {
+    templateRows.forEach((templateRow, templateRowIndex) => {
+      const currentRowIndex = startRow + (employeeIndex * templateRows.length) + templateRowIndex;
+      const currentRow = worksheet.getRow(currentRowIndex);
+
+      currentRow.height = templateRow.height;
+
+      templateRow.cells.forEach((cellData) => {
+        const cell = currentRow.getCell(cellData.colNumber);
+        
+        cell.style = cellData.style;
+        cell.border = cellData.border;
+
+        if (cellData.value && containsKeys(cellData.value)) {
+          cell.value = parseAndReplaceKeys(cellData.value, employee);
+        } else {
+          cell.value = cellData.value;
+        }
+      });
     });
   });
 
@@ -120,4 +116,14 @@ export const downloadExcelFile = (blob: Blob, filename: string) => {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+};
+
+ExcelJS.getExcelColumnName = function(colNumber: number): string {
+  let columnName = '';
+  while (colNumber > 0) {
+    const remainder = (colNumber - 1) % 26;
+    columnName = String.fromCharCode(65 + remainder) + columnName;
+    colNumber = Math.floor((colNumber - 1) / 26);
+  }
+  return columnName;
 };
