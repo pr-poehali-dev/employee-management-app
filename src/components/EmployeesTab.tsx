@@ -6,8 +6,7 @@ import Icon from '@/components/ui/icon';
 import { Employee, ExcelTemplate } from '@/types';
 import { EmployeeDetailsModal } from './employees/EmployeeDetailsModal';
 import { EmployeeCard } from './employees/EmployeeCard';
-import { CreateRequestDialog } from './employees/CreateRequestDialog';
-import { GenerateExcelDialog } from './employees/GenerateExcelDialog';
+import { CreateRequestWithTemplateDialog } from './employees/CreateRequestWithTemplateDialog';
 import { EmployeesFilters } from './employees/EmployeesFilters';
 
 interface EmployeesTabProps {
@@ -22,13 +21,9 @@ interface EmployeesTabProps {
   selectedEmployees: number[];
   handleEmployeeSelect: (id: number) => void;
   handleManageEmployee: (action: 'add' | 'edit' | 'delete', employee?: Employee) => void;
-  requestCategory: string;
-  setRequestCategory: (category: string) => void;
-  requestType: string;
-  setRequestType: (type: string) => void;
-  createRequest: () => void;
   filteredEmployees: Employee[];
   templates: ExcelTemplate[];
+  onRequestCreated: () => void;
 }
 
 export default function EmployeesTab({
@@ -43,13 +38,9 @@ export default function EmployeesTab({
   selectedEmployees,
   handleEmployeeSelect,
   handleManageEmployee,
-  requestCategory,
-  setRequestCategory,
-  requestType,
-  setRequestType,
-  createRequest,
   filteredEmployees,
-  templates
+  templates,
+  onRequestCreated
 }: EmployeesTabProps) {
   const [selectedEmployeeForDetails, setSelectedEmployeeForDetails] = useState<Employee | null>(null);
   
@@ -85,20 +76,11 @@ export default function EmployeesTab({
               Удалить сотрудников
             </Button>
             
-            <GenerateExcelDialog
+            <CreateRequestWithTemplateDialog
               selectedEmployees={selectedEmployees}
               employees={employees}
               templates={templates}
-            />
-            
-            <CreateRequestDialog
-              selectedEmployees={selectedEmployees}
-              employees={employees}
-              requestCategory={requestCategory}
-              requestType={requestType}
-              onCategoryChange={setRequestCategory}
-              onTypeChange={setRequestType}
-              onCreateRequest={createRequest}
+              onRequestCreated={onRequestCreated}
             />
           </div>
         </div>

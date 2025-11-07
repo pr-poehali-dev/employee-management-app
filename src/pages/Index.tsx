@@ -326,13 +326,9 @@ const Index = () => {
             selectedEmployees={selectedEmployees}
             handleEmployeeSelect={handleEmployeeSelect}
             handleManageEmployee={handleManageEmployee}
-            requestCategory={requestCategory}
-            setRequestCategory={setRequestCategory}
-            requestType={requestType}
-            setRequestType={setRequestType}
-            createRequest={createRequest}
             filteredEmployees={filteredEmployees}
             templates={templates}
+            onRequestCreated={loadRequests}
           />
         )}
 
