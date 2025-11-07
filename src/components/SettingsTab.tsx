@@ -115,10 +115,10 @@ export const SettingsTab = ({ templates, onSaveTemplate, onDeleteTemplate }: Set
               <AlertDescription className="text-sm text-blue-800">
                 <strong>Как использовать:</strong>
                 <ol className="list-decimal list-inside mt-2 space-y-1">
-                  <li>В ячейках Excel или таблицах Word напишите ключи: <code className="bg-blue-100 px-1 rounded">surname</code>, <code className="bg-blue-100 px-1 rounded">name</code></li>
-                  <li>Можно комбинировать: <code className="bg-blue-100 px-1 rounded">surname, name</code> или <code className="bg-blue-100 px-1 rounded">surname name</code></li>
-                  <li>Разделители (запятые, пробелы и т.д.) сохраняются автоматически</li>
-                  <li>Текст без ключей копируется для каждого сотрудника без изменений</li>
+                  <li>В ячейках Excel или таблицах Word пишите ключи с <code className="bg-blue-100 px-1 rounded">#</code>: <code className="bg-blue-100 px-1 rounded">#surname</code>, <code className="bg-blue-100 px-1 rounded">#name</code></li>
+                  <li>Можно комбинировать: <code className="bg-blue-100 px-1 rounded">#surname, #name</code> или <code className="bg-blue-100 px-1 rounded">#name name #surname</code></li>
+                  <li>Разделители и обычный текст сохраняются автоматически</li>
+                  <li>Пример: <code className="bg-blue-100 px-1 rounded">#name name #surname</code> → <code className="bg-blue-100 px-1 rounded">Кирилл name Новиков</code></li>
                 </ol>
               </AlertDescription>
             </Alert>
@@ -175,7 +175,7 @@ export const SettingsTab = ({ templates, onSaveTemplate, onDeleteTemplate }: Set
                 {availableKeys.map(({ key, label }) => (
                   <div key={key} className="flex items-center gap-2 text-sm">
                     <code className="bg-white px-2 py-1 rounded border text-xs font-mono">
-                      {key}
+                      #{key}
                     </code>
                     <span className="text-gray-600">— {label}</span>
                   </div>

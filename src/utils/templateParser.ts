@@ -28,13 +28,13 @@ export const parseAndReplaceKeys = (
   if (!text) return '';
 
   const keyPattern = new RegExp(
-    Object.keys(keyMapping).join('|'),
+    `#(${Object.keys(keyMapping).join('|')})`,
     'gi'
   );
 
-  return text.replace(keyPattern, (match) => {
-    const key = match.toLowerCase() as FieldKey;
-    return getFieldValue(employee, key);
+  return text.replace(keyPattern, (match, key) => {
+    const normalizedKey = key.toLowerCase() as FieldKey;
+    return getFieldValue(employee, normalizedKey);
   });
 };
 
@@ -42,7 +42,7 @@ export const containsKeys = (text: string): boolean => {
   if (!text) return false;
   
   const keyPattern = new RegExp(
-    Object.keys(keyMapping).join('|'),
+    `#(${Object.keys(keyMapping).join('|')})`,
     'gi'
   );
   
@@ -54,14 +54,14 @@ export const extractKeysFromText = (text: string): FieldKey[] => {
   
   const keys: FieldKey[] = [];
   const keyPattern = new RegExp(
-    `(${Object.keys(keyMapping).join('|')})`,
+    `#(${Object.keys(keyMapping).join('|')})`,
     'gi'
   );
   
-  const matches = text.match(keyPattern);
+  const matches = [...text.matchAll(keyPattern)];
   if (matches) {
     matches.forEach(match => {
-      keys.push(match.toLowerCase() as FieldKey);
+      keys.push(match[1].toLowerCase() as FieldKey);
     });
   }
   
